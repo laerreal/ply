@@ -768,9 +768,11 @@ class Preprocessor(object):
                     return
                 filename = "".join([x.value for x in tokens[1:i]])
                 path = self.path + [""] + self.temp_path
+                is_global = True
             elif tokens[0].type == self.t_STRING:
                 filename = tokens[0].value[1:-1]
                 path = self.temp_path + [""] + self.path
+                is_global = False
             else:
                 print("Malformed #include statement")
                 return
@@ -778,6 +780,10 @@ class Preprocessor(object):
             iname = os.path.join(p,filename)
             try:
                 data = open(iname,"r").read()
+
+                if "on_include" in dir(self):
+                    self.on_include(self.source, filename, is_global)
+
                 dname = os.path.dirname(iname)
                 if dname:
                     self.temp_path.insert(0,dname)
