@@ -165,6 +165,8 @@ class Preprocessor(object):
         self.path = []
         self.temp_path = []
 
+        self.on_define = []
+
         # Probe the lexer for selected tokens
         self.lexprobe()
 
@@ -817,10 +819,20 @@ class Preprocessor(object):
             if not mtype:
                 m = Macro(name.value,[])
                 self.macros[name.value] = m
+
+                if "source" in dir(self):
+                    for cb in self.on_define:
+                        cb(self.source, m)
+
             elif mtype.type in self.t_WS:
                 # A normal macro
                 m = Macro(name.value,self.tokenstrip(linetok[2:]))
                 self.macros[name.value] = m
+
+                if "source" in dir(self):
+                    for cb in self.on_define:
+                        cb(self.source, m)
+
             elif mtype.value == '(':
                 # A macro with arguments
                 tokcount, args, positions = self.collect_args(linetok[1:])
@@ -862,6 +874,10 @@ class Preprocessor(object):
                     m = Macro(name.value,mvalue,[x[0].value for x in args],variadic)
                     self.macro_prescan(m)
                     self.macros[name.value] = m
+
+                if "source" in dir(self):
+                    for cb in self.on_define:
+                        cb(self.source, m)
             else:
                 print("Bad macro definition")
         except LookupError:
