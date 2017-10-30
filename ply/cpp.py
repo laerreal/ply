@@ -9,6 +9,9 @@
 # -----------------------------------------------------------------------------
 from __future__ import generators
 
+from six import text_type, binary_type
+from six.moves import range as xrange
+
 # -----------------------------------------------------------------------------
 # Default preprocessor lexer definitions.   These tokens are enough to get
 # a basic preprocessor working.   Other modules may import these if they want
@@ -781,7 +784,7 @@ class Preprocessor(object):
     # ----------------------------------------------------------------------
 
     def define(self,tokens):
-        if isinstance(tokens,(str,unicode)):
+        if isinstance(tokens, (text_type, binary_type)):
             tokens = self.tokenize(tokens)
 
         linetok = tokens
