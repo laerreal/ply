@@ -3,6 +3,8 @@ from unittest import TestCase, main
 from multiprocessing import Process, Queue
 from six.moves.queue import Empty
 
+from six import PY3
+
 import sys
 
 if ".." not in sys.path:
@@ -44,5 +46,10 @@ class CPPTests(TestCase):
             raise RuntimeError("Time limit exceeded!")
         else:
             self.assertMultiLineEqual(out, expected)
+
+    if PY3:
+        def test_define_under_3(self):
+            # This test targets NameError in `define` method under Python 3.
+            self.__test_preprocessing("#define a b", "")
 
 main()
