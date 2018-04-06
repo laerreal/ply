@@ -15,6 +15,8 @@ from ply.cpp import *
 def preprocessing(in_, out_queue):
     out = None
 
+    out_queue.put("123")
+
     try:
         p = Preprocessor(lex())
         p.parse(in_)
@@ -96,6 +98,17 @@ a"""
 
 
 a"""
+        )
+
+if False:
+    def test_unk(self):
+        self.__test_preprocessing("""\
+#define __AW__(AW, AW_) AW ## AW_
+# define __AW(AW) __AW__(AW, A)
+#define RpcProtseqVectorFree __AW(RpcProtseqVectorFree)
+"""
+            , """\
+"""
         )
 
 main()
