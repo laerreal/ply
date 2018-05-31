@@ -632,11 +632,16 @@ class LexerReflect(object):
             self.error = True
 
     def get_states(self):
-        self.states = self.ldict.get('states', None)
+        _states = self.ldict.get('states', None)
         # Build statemap
-        if self.states:
-            if not isinstance(self.states, (tuple, list)):
-                self.log.error('states must be defined as a tuple or list')
+        if _states:
+            try:
+                self.states = tuple(s for s in _states)
+            except TypeError:
+                # DELME: backward compatibility
+                self.states = _states
+
+                self.log.error('states must be defined as an iterable')
                 self.error = True
             else:
                 for s in self.states:
