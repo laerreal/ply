@@ -618,8 +618,6 @@ class LexerReflect(object):
     # Get the literals specifier
     def get_literals(self):
         self.literals = self.ldict.get('literals', '')
-        if not self.literals:
-            self.literals = ''
 
     # Validate literals
     def validate_literals(self):
