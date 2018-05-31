@@ -741,7 +741,6 @@ class LexerReflect(object):
                 module = inspect.getmodule(f)
                 self.modules.add(module)
 
-                tokname = self.toknames[fname]
                 if isinstance(f, types.MethodType):
                     reqargs = 2
                 else:
