@@ -583,14 +583,16 @@ class LexerReflect(object):
 
     # Get the tokens map
     def get_tokens(self):
-        tokens = self.ldict.get('tokens', None)
-        if not tokens:
+        _tokens = self.ldict.get('tokens', None)
+        if not _tokens:
             self.log.error('No token list is defined')
             self.error = True
             return
 
-        if not isinstance(tokens, (list, tuple)):
-            self.log.error('tokens must be a list or tuple')
+        try:
+            tokens = tuple(t for t in _tokens)
+        except TypeError:
+            self.log.error('tokens must be an iterable')
             self.error = True
             return
 
