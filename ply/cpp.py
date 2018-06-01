@@ -370,27 +370,32 @@ class Preprocessor(object):
     # ----------------------------------------------------------------------
 
     def collect_args(self,tokenlist):
-        args = []
         positions = []
-        current_arg = []
-        nesting = 1
-        tokenlen = len(tokenlist)
+
+        # token iterator
+        titer = iter(enumerate(tokenlist))
 
         # Search for the opening '('.
-        i = 0
-        while (i < tokenlen) and (tokenlist[i].type in self.t_WS):
-            i += 1
-
-        if (i < tokenlen) and (tokenlist[i].value == '('):
-            positions.append(i+1)
+        for i, t in titer:
+            if t.value == '(':
+                positions.append(i + 1)
+                break
+            elif t.value not in self.t_WS:
+                self.error(self.source, tokenlist[0].lineno,
+                    "Non-whitespace token at the beginning of macro arguments"
+                )
+                return 0, [], []
         else:
-            self.error(self.source,tokenlist[0].lineno,"Missing '(' in macro arguments")
+            self.error(self.source, tokenlist[0].lineno,
+                "Missing '(' in macro arguments"
+            )
             return 0, [], []
 
-        i += 1
+        args = []
+        current_arg = []
+        nesting = 1
 
-        while i < tokenlen:
-            t = tokenlist[i]
+        for i, t in titer:
             if t.value == '(':
                 current_arg.append(t)
                 nesting += 1
@@ -408,7 +413,6 @@ class Preprocessor(object):
                 current_arg = []
             else:
                 current_arg.append(t)
-            i += 1
 
         # Missing end argument
         self.error(self.source,tokenlist[-1].lineno,"Missing ')' in macro arguments")
