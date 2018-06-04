@@ -335,6 +335,7 @@ class Lexer:
                 if not func:
                     # If no token type was set, it's an ignored token
                     if tok.type:
+                        tok.replaces = None
                         self.lexpos = m.end()
                         return tok
                     else:
@@ -349,6 +350,7 @@ class Lexer:
                 self.lexmatch = m
                 self.lexpos = lexpos
 
+                backtok = copy.copy(tok)
                 newtok = func(tok)
 
                 # Every function must return a token, if nothing, we just move to next token
@@ -356,6 +358,10 @@ class Lexer:
                     lexpos    = self.lexpos         # This is here in case user has updated lexpos.
                     lexignore = self.lexignore      # This is here in case there was a state change
                     break
+
+                if newtok != backtok:
+                    newtok.replaces = backtok
+                    backtok.replaces = None
 
                 # Verify type of the token.  If not in the token map, raise an error
                 if not self.lexoptimize:
@@ -373,6 +379,7 @@ class Lexer:
                     tok.lineno = self.lineno
                     tok.type = tok.value
                     tok.lexpos = lexpos
+                    tok.replaces = None
                     self.lexpos = lexpos + 1
                     return tok
 
@@ -385,6 +392,7 @@ class Lexer:
                     tok.lexer = self
                     tok.lexpos = lexpos
                     self.lexpos = lexpos
+                    backtok = copy.copy(tok)
                     newtok = self.lexerrorf(tok)
                     if lexpos == self.lexpos:
                         # Error method didn't change text position at all. This is an error.
@@ -392,6 +400,9 @@ class Lexer:
                     lexpos = self.lexpos
                     if not newtok:
                         continue
+
+                    newtok.replaces = backtok
+                    backtok.replaces = None
                     return newtok
 
                 self.lexpos = lexpos
@@ -405,7 +416,11 @@ class Lexer:
             tok.lexpos = lexpos
             tok.lexer = self
             self.lexpos = lexpos
+            backtok = copy.copy(tok)
             newtok = self.lexeoff(tok)
+            if newtok is not None and newtok != backtok:
+                newtok.replaces = backtok
+                backtok.replaces = None
             return newtok
 
         self.lexpos = lexpos + 1
