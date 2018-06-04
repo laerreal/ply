@@ -57,6 +57,12 @@ tokens = (
 
 literals = "+-*/%|&~^<>=!?()[]{}.,;:\\\'\""
 
+# ignore escaped newline token
+def t_CPP_JOIN_LINES(t):
+    r'\\\s*\n'
+    t.lexer.lineno += 1
+    return None
+
 # Whitespace
 def t_CPP_WS(t):
     r'\s+'
@@ -302,23 +308,11 @@ class Preprocessor(object):
     # ----------------------------------------------------------------------
     # group_lines()
     #
-    # Given an input string, this function splits it into lines.  Trailing whitespace
-    # is removed.   Any line ending with \ is grouped with the next line.  This
-    # function forms the lowest level of the preprocessor---grouping into text into
-    # a line-by-line format.
+    # Returns input line-by-line
     # ----------------------------------------------------------------------
 
     def group_lines(self,input):
         lex = self.lexer.clone()
-        lines = [x.rstrip() for x in input.splitlines()]
-        for i in xrange(len(lines)):
-            j = i+1
-            while lines[i].endswith('\\') and (j < len(lines)):
-                lines[i] = lines[i][:-1]+lines[j]
-                lines[j] = ""
-                j += 1
-
-        input = "\n".join(lines)
         lex.input(input)
         lex.lineno = 1
 
