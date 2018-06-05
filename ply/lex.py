@@ -100,6 +100,72 @@ class NullLogger(object):
         return self
 
 
+class TokenWrapper(str):
+    "This class allows use token stream of one lexer as input to another one."
+
+    def __init__(self, iterable):
+        """
+        :iterable:
+            Any iterable of either one character strings or `LexToken`s
+        """
+        # charmap internally maps outer index (accessible using [] operator)
+        # to tuple (
+        #  - character which is part of char sequence obtained by joining all
+        #    items in the iterable,
+        #  - token containing this character or iterable itself (if it is not
+        #    an iterable of `LexToken`s),
+        #  - index of the character in either this token or the iterable,
+        #  - outer index as a back reference to `charmap`s key
+        # ).
+        charmap = {}
+        self.charmap = charmap
+
+        initer = iter(iterable)
+        # get the first element to identify the sequence kind
+        try:
+            first = next(initer)
+        except StopIteration:
+            self.nextouterindex = 0
+            return
+
+        if isinstance(first, LexToken):
+            self.nextouterindex = 0
+
+            self.feedtoken(first)
+            for t in iterable:
+                self.feedtoken(t)
+        elif isinstance(first, StringTypes):
+            charmap[0] = (first, iterable, 0, 0)
+            i = 1
+            for c in initer:
+                charmap[i] = (c, iterable, i, i)
+                i += 1
+
+            self.nextouterindex = i
+        else:
+            raise ValueError('Expected a string')
+
+    def feedtoken(self, t):
+        charmap = self.charmap # cache reference
+
+        oi = self.nextouterindex
+
+        for ii, c in enumerate(t.value):
+            charmap[oi] = (c, t, ii, oi)
+            oi += 1
+
+        self.nextouterindex = oi
+
+    def __getitem__(self, idx):
+        try:
+            c, _, _, _ = self.charmap[idx]
+        except KeyError:
+            raise IndexError()
+        return c
+
+    def __len__(self):
+        return self.nextouterindex
+
 # -----------------------------------------------------------------------------
 #                        === Lexing Engine ===
 #
@@ -252,12 +318,10 @@ class Lexer:
     # ------------------------------------------------------------
     def input(self, s):
         # Pull off the first character to see if s looks like a string
-        c = s[:1]
-        if not isinstance(c, StringTypes):
-            raise ValueError('Expected a string')
-        self.lexdata = s
+        _s = TokenWrapper(s)
+        self.lexdata = _s
         self.lexpos = 0
-        self.lexlen = len(s)
+        self.lexlen = len(_s)
 
     # ------------------------------------------------------------
     # begin() - Changes the lexing state
