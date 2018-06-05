@@ -423,6 +423,8 @@ class Lexer:
                 tok.lexpos = lexpos
 
                 end = m.end()
+                tok.origin = tuple(lexdata.tokensof(range(lexpos, end)))
+
                 i = m.lastindex
                 func, tok.type = lexindexfunc[i]
 
