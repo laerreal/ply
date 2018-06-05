@@ -160,7 +160,7 @@ class TokenWrapper(str):
         try:
             c, _, _, _ = self.charmap[idx]
         except KeyError:
-            raise IndexError()
+            raise IndexError("%s is out of range" % idx)
         return c
 
     def __len__(self):
