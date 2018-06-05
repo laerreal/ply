@@ -166,6 +166,35 @@ class TokenWrapper(str):
     def __len__(self):
         return self.nextouterindex
 
+    def tokensof(self, range):
+        """Iterates over interval of tokens those are sources of given outer
+        range.
+
+        :range:
+            an iterable of integers
+        :returns:
+            generator of sequence (s, t0, t1, ..., tN, e) where:
+              - s  : inner index of t0 that corresponds to first index of outer
+                     range,
+              - t? : tokens intersected by the range,
+              - e  : inner index of tN corresponding to last index of outer
+                     range,
+        """
+
+        charmap = self.charmap # cache it
+
+        prevtok = None
+
+        for i in range:
+            _, t, ii, _ = charmap[i]
+            if prevtok is None:
+                yield ii
+            if t is not prevtok:
+                yield t
+                prevtok = t
+
+        yield ii
+
 # -----------------------------------------------------------------------------
 #                        === Lexing Engine ===
 #
