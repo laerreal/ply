@@ -477,9 +477,15 @@ class Preprocessor(object):
         str_expansion = {}
         for argnum, i in macro.str_patch:
             if argnum not in str_expansion:
-                str_expansion[argnum] = ('"%s"' % "".join([x.value for x in args[argnum]])).replace("\\","\\\\")
-            rep[i] = copy.copy(rep[i])
-            rep[i].value = str_expansion[argnum]
+                subst = args[argnum]
+                str_expansion[argnum] = (
+                    ('"%s"' % "".join([x.value for x in subst])).replace("\\", "\\\\"),
+                    tuple(subst) # copy container only, not tokens in it
+                )
+            t = copy.copy(rep[i])
+            t.value, t.origin = str_expansion[argnum]
+            t.replaces = rep[i]
+            rep[i] = t
 
         # Make the variadic macro comma patch.  If the variadic macro argument is empty, we get rid
         comma_patch = False
@@ -496,12 +502,24 @@ class Preprocessor(object):
         for ptype, argnum, i in macro.patch:
             # Concatenation.   Argument is left unexpanded
             if ptype == 'c':
-                rep[i:i+1] = args[argnum]
+                new_val = args[argnum]
             # Normal expansion.  Argument is macro expanded first
             elif ptype == 'e':
                 if argnum not in expanded_args:
-                    expanded_args[argnum] = self.expand_macros(args[argnum],expanded)
-                rep[i:i+1] = expanded_args[argnum]
+                    expanded_args[argnum] = self.expand_macros(args[argnum], expanded)
+                new_val = expanded_args[argnum]
+            else:
+                continue
+
+            subst = []
+            replaced = rep[i]
+            for t in new_val:
+                st = copy.copy(t)
+                st.replaces = replaced
+                st.origin = (t,)
+                subst.append(st)
+
+            rep[i:i + 1] = subst
 
         # Get rid of removed comma if necessary
         if comma_patch:
