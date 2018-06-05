@@ -422,6 +422,7 @@ class Lexer:
                 tok.lineno = self.lineno
                 tok.lexpos = lexpos
 
+                end = m.end()
                 i = m.lastindex
                 func, tok.type = lexindexfunc[i]
 
@@ -429,13 +430,13 @@ class Lexer:
                     # If no token type was set, it's an ignored token
                     if tok.type:
                         tok.replaces = None
-                        self.lexpos = m.end()
+                        self.lexpos = end
                         return tok
                     else:
-                        lexpos = m.end()
+                        lexpos = end
                         break
 
-                lexpos = m.end()
+                lexpos = end
 
                 # If token is processed by a function, call it
 
