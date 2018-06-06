@@ -186,6 +186,13 @@ class Macro(object):
             self.vararg = arglist[-1]
         self.source = None
 
+    def originate(self):
+        for t in self.value:
+            tn = copy.copy(t)
+            tn.origin = t
+            del tn.macro # new token is not in the macro now
+            yield tn
+
 # ------------------------------------------------------------------
 # Preprocessor object
 #
