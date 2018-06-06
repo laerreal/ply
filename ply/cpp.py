@@ -155,6 +155,7 @@ _trigraph_rep = {
 }
 
 def trigraph(input):
+    # TODO: token loss
     return _trigraph_pat.sub(lambda g: _trigraph_rep[g.group()[-1]],input)
 
 # ------------------------------------------------------------------
@@ -339,10 +340,12 @@ class Preprocessor(object):
         i = 0
         while i < len(tokens) and tokens[i].type in self.t_WS:
             i += 1
+        # TODO: token loss
         del tokens[:i]
         i = len(tokens)-1
         while i >= 0 and tokens[i].type in self.t_WS:
             i -= 1
+        # TODO: token loss
         del tokens[i+1:]
         return tokens
 
@@ -436,17 +439,20 @@ class Preprocessor(object):
                 if i > 0 and value[i - 1].value == '#':
                     value[i] = copy.copy(value[i])
                     value[i].type = self.t_STRING
+                    # TODO: token loss
                     del value[i - 1]
                     macro.str_patch.append((argnum,i-1))
                     continue
                 # Concatenation
                 elif (i > 0 and value[i - 1].value == '##'):
                     patch.append(('c', argnum, i - 1))
+                    # TODO: token loss
                     del value[i - 1]
                     i -= 1
                     continue
                 elif ((i + 1) < len(value) and value[i + 1].value == '##'):
                     patch.append(('c', argnum, i))
+                    # TODO: token loss
                     del value[i + 1]
                     continue
                 # Standard expansion
@@ -491,6 +497,7 @@ class Preprocessor(object):
         comma_patch = False
         if macro.variadic and not args[-1]:
             for i in macro.var_comma_patch:
+                # TODO: token loss
                 rep[i] = None
                 comma_patch = True
 

@@ -407,6 +407,7 @@ class Lexer:
         while lexpos < lexlen:
             # This code provides some short-circuit code for whitespace, tabs, and other ignored characters
             if lexdata[lexpos] in lexignore:
+                # TODO: token loss
                 lexpos += 1
                 continue
 
@@ -435,6 +436,7 @@ class Lexer:
                         self.lexpos = end
                         return tok
                     else:
+                        # TODO: token loss
                         lexpos = end
                         break
 
@@ -451,6 +453,7 @@ class Lexer:
 
                 # Every function must return a token, if nothing, we just move to next token
                 if not newtok:
+                    # TODO: token loss
                     lexpos    = self.lexpos         # This is here in case user has updated lexpos.
                     lexignore = self.lexignore      # This is here in case there was a state change
                     break
@@ -495,6 +498,7 @@ class Lexer:
                         raise LexError("Scanning error. Illegal character '%s'" % (lexdata[lexpos]), lexdata[lexpos:])
                     lexpos = self.lexpos
                     if not newtok:
+                        # TODO: token loss
                         continue
 
                     newtok.replaces = backtok
@@ -515,6 +519,7 @@ class Lexer:
             backtok = copy.copy(tok)
             newtok = self.lexeoff(tok)
             if newtok is not None and newtok != backtok:
+                # TODO: token loss? it's EOF...
                 newtok.replaces = backtok
                 backtok.replaces = None
             return newtok
