@@ -178,6 +178,8 @@ class Macro(object):
     def __init__(self,name,value,arglist=None,variadic=False):
         self.name = name
         self.value = value
+        for t in value:
+            t.macro = self
         self.arglist = arglist
         self.variadic = variadic
         if variadic:
