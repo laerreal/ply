@@ -462,7 +462,7 @@ class Preprocessor(object):
                 )
             t = copy.copy(rep[i])
             t.value, t.origin = str_expansion[argnum]
-            t.replaces = rep[i]
+            t.replaces = (rep[i],)
             rep[i] = t
 
         # Make the variadic macro comma patch.  If the variadic macro argument is empty, we get rid
@@ -494,7 +494,7 @@ class Preprocessor(object):
             replaced = rep[i]
             for t in new_val:
                 st = copy.copy(t)
-                st.replaces = replaced
+                st.replaces = (replaced,)
                 st.origin = (t,)
                 subst.append(st)
 

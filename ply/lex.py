@@ -457,7 +457,7 @@ class Lexer:
                     break
 
                 if newtok != backtok:
-                    newtok.replaces = backtok
+                    newtok.replaces = (backtok,)
                     backtok.replaces = None
 
                 # Verify type of the token.  If not in the token map, raise an error
@@ -499,7 +499,7 @@ class Lexer:
                         # TODO: token loss
                         continue
 
-                    newtok.replaces = backtok
+                    newtok.replaces = (backtok,)
                     backtok.replaces = None
                     return newtok
 
@@ -518,7 +518,7 @@ class Lexer:
             newtok = self.lexeoff(tok)
             if newtok is not None and newtok != backtok:
                 # TODO: token loss? it's EOF...
-                newtok.replaces = backtok
+                newtok.replaces = (backtok,)
                 backtok.replaces = None
             return newtok
 
