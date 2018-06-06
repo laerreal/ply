@@ -485,7 +485,7 @@ class Preprocessor(object):
 
     def macro_expand_args(self,macro,args,expanded):
         # Make a copy of the macro token sequence
-        rep = [copy.copy(_x) for _x in macro.value]
+        rep = list(macro.originate())
 
         # Make string expansion patches.  These do not alter the length of the replacement sequence
 
@@ -566,9 +566,13 @@ class Preprocessor(object):
                     m = self.macros[t.value]
                     if not m.arglist:
                         # A simple macro
-                        ex = self.expand_macros([copy.copy(_x) for _x in m.value],expanded)
+                        ex = list(m.originate())
+                        for e in ex:
+                            e.replaces = (t,)
+                        ex = self.expand_macros(ex, expanded)
                         for e in ex:
                             e.lineno = t.lineno
+
                         tokens[i:i+1] = ex
                         i += len(ex)
                     else:
@@ -611,8 +615,12 @@ class Preprocessor(object):
                     del expanded[t.value]
                     continue
                 elif t.value == '__LINE__':
-                    t.type = self.t_INTEGER
-                    t.value = self.t_INTEGER_TYPE(t.lineno)
+                    ts = copy.copy(t)
+                    ts.type = self.t_INTEGER
+                    ts.value = self.t_INTEGER_TYPE(t.lineno)
+                    ts.replaces = (t,)
+                    ts.origin = (None,)
+                    tokens[i] = ts
 
             i += 1
         return tokens
