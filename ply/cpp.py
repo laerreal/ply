@@ -603,11 +603,18 @@ class Preprocessor(object):
 
                                 # Get macro replacement text
                                 rep = self.macro_expand_args(m,args,expanded)
-                                rep = self.expand_macros(rep,expanded)
+                                rep = self.expand_macros(rep, expanded)
+                                subst = []
+                                replaced = tuple(tokens[i:j + tokcount])
                                 for r in rep:
-                                    r.lineno = t.lineno
-                                tokens[i:j+tokcount] = rep
-                                i += len(rep)
+                                    rn = copy.copy(r)
+                                    rn.lineno = t.lineno
+                                    rn.origin = r
+                                    rn.replaces = replaced
+                                    subst.append(rn)
+
+                                tokens[i:j + tokcount] = subst
+                                i += len(subst)
                         else:
                             # This is not a macro. It is just a word which
                             # equals to name of the macro. Hence, go to the
