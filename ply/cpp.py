@@ -577,6 +577,7 @@ class Preprocessor(object):
                         i += len(ex)
                     else:
                         # A macro with arguments
+                        # Skip white spaces before '('
                         j = i + 1
                         while j < len(tokens) and tokens[j].type in self.t_WS:
                             j += 1
