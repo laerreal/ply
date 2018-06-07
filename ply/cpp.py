@@ -737,8 +737,10 @@ class Preprocessor(object):
         ifstack = []
 
         for x in lines:
+            # skip leading white spaces at beginning of the line before '#'
             for i,tok in enumerate(x):
                 if tok.type not in self.t_WS: break
+
             if tok.value == '#':
                 # Preprocessor directive
 
