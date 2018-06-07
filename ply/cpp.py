@@ -795,7 +795,6 @@ class Preprocessor(object):
 
         for tok in self.expand_macros(chunk):
             yield tok
-        chunk = []
 
     # ----------------------------------------------------------------------
     # include()
