@@ -589,9 +589,9 @@ class Preprocessor(object):
                                 i = j + tokcount
                             elif m.variadic and len(args) < m_last_arg:
                                 if m_last_arg > 1:
-                                    self.error(self.source, t.lineno, "Macro %s must have at least %d arguments" % (t.value, m_last_arg))
+                                    self.error(self.source, t.lineno, "Macro %s requires at least %d arguments" % (t.value, m_last_arg))
                                 else:
-                                    self.error(self.source, t.lineno, "Macro %s must have at least %d argument" % (t.value, m_last_arg))
+                                    self.error(self.source, t.lineno, "Macro %s requires at least %d argument" % (t.value, m_last_arg))
                                 i = j + tokcount
                             else:
                                 if m.variadic:
