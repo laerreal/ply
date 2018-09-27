@@ -1084,8 +1084,14 @@ def join(toks):
 
 def runmain(lexer=None, data=None):
     if not data:
+        argv = sys.argv
+        if argv[1] == "-j":
+            _join = True
+            del argv[1]
+        else:
+            _join = False
         try:
-            filename = sys.argv[1]
+            filename = argv[1]
             f = open(filename)
             data = f.read()
             f.close()
@@ -1103,11 +1109,24 @@ def runmain(lexer=None, data=None):
     else:
         _token = token
 
-    while True:
-        tok = _token()
-        if not tok:
-            break
-        sys.stdout.write('(%s,%r,%d,%d,%r)\n' % (tok.type, tok.value, tok.lineno, tok.lexpos, tok.prefix))
+    if _join:
+        tokens = []
+
+        while True:
+            tok = _token()
+            if not tok:
+                break
+            tokens.append(tok)
+            sys.stdout.write('(%s,%r,%d,%d,%r)\n' % (tok.type, tok.value, tok.lineno, tok.lexpos, tok.prefix))
+
+        sys.stdout.write("\n%s\n" % join(tokens))
+
+    else:
+        while True:
+            tok = _token()
+            if not tok:
+                break
+            sys.stdout.write('(%s,%r,%d,%d,%r)\n' % (tok.type, tok.value, tok.lineno, tok.lexpos, tok.prefix))
 
 # -----------------------------------------------------------------------------
 # @TOKEN(regex)
