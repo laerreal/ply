@@ -8,11 +8,12 @@
 
 int main(int argc, char **argv)
 {
-    // this is a single line comment
+    /* this is another single line comment */
 	switch (A(argc)) {
 	case 1:
-	  break
+	  break;
 	default:
+	  break;
 	}
 
 	return 0;
