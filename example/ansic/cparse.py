@@ -1064,7 +1064,35 @@ def iter_tokens(root):
             for tok in iter_tokens(child):
                 yield tok
 
+if sys.version_info[0] == 2:
+    def u2s(u):
+        return u.encode("utf-8")
+else:
+    def u2s(u):
+        return u
 
+from six import u
+
+def adapt_for_label(s):
+    # \\l - for left justification
+    return s.\
+        replace("\\", "\\\\").\
+        replace('\n', "\\\\n\\l").\
+        replace(" ", u2s(u"\u2423")).\
+        replace("\t", "\\\\t")
+
+def build_subtree(graph, current):
+    node = "%s_%x" % (current.type, id(current))
+
+    if isinstance(current, lex.LexToken):
+        label = current.type + "\\n" + adapt_for_label(current.prefix + current.value) + "\\l"
+        graph.node(node, label=label)
+    elif isinstance(current, yacc.YaccSymbol):
+        graph.node(node, label=current.type)
+        for child in current.value:
+            graph.edge(node, build_subtree(graph, child))
+
+    return node
 
 if __name__ == "__main__":
     from argparse import ArgumentParser
@@ -1073,6 +1101,8 @@ if __name__ == "__main__":
     ap.add_argument("-d", action="store_true", help="Debug YACC")
     ap.add_argument("-j", action="store_true",
                     help="Join & print tokens of parsed tree")
+    ap.add_argument("-g", action="store_true",
+                    help="Out parse tree in Graphviz format to {in_file}.gv")
     ap.add_argument("in_file", help="Name of file to parse")
     args = ap.parse_args()
 
@@ -1089,3 +1119,19 @@ if __name__ == "__main__":
     result = parser.parse(data, debug=args.d)
     if args.j:
         print(lex.join(iter_tokens(result)))
+
+    if args.g:
+        from graphviz import Digraph
+
+        graph = Digraph(name="Parse Tree",
+            graph_attr=dict(rankdir="TB"),
+            node_attr=dict(shape="polygon", fontname="Courier New"),
+            edge_attr=dict(style="filled")
+        )
+
+        for root in result:
+            build_subtree(graph, root)
+
+        f = open(in_file + ".gv", "w")
+        f.write(graph.source)
+        f.close()
