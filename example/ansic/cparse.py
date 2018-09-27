@@ -1046,3 +1046,19 @@ yacc.yacc()
 #yacc.yacc(method='LALR',write_tables=False,debug=False)
 
 #profile.run("yacc.yacc(method='LALR')")
+
+
+def iter_tokens(root):
+    "Iterates over tokens in parse tree."
+
+    if isinstance(root, lex.LexToken):
+        yield root
+    else:
+        if isinstance(root, yacc.YaccSymbol):
+            children = root.value
+        else: # root is a container
+            children = root
+
+        for child in children:
+            for tok in iter_tokens(child):
+                yield tok
