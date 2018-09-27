@@ -7,6 +7,7 @@
 import sys
 import clex
 import ply.yacc as yacc
+import ply.lex as lex
 
 # Get the token map
 tokens = clex.tokens
@@ -1042,7 +1043,7 @@ def p_error(t):
 import profile
 # Build the grammar
 
-yacc.yacc()
+parser = yacc.yacc()
 #yacc.yacc(method='LALR',write_tables=False,debug=False)
 
 #profile.run("yacc.yacc(method='LALR')")
@@ -1062,3 +1063,29 @@ def iter_tokens(root):
         for child in children:
             for tok in iter_tokens(child):
                 yield tok
+
+
+
+if __name__ == "__main__":
+    from argparse import ArgumentParser
+
+    ap = ArgumentParser(description="K&R C Parser")
+    ap.add_argument("-d", action="store_true", help="Debug YACC")
+    ap.add_argument("-j", action="store_true",
+                    help="Join & print tokens of parsed tree")
+    ap.add_argument("in_file", help="Name of file to parse")
+    args = ap.parse_args()
+
+    try:
+        in_file = args.in_file
+    except AttributeError:
+        sys.stdout.write("Reading from standard input (type EOF to end):\n")
+        data = sys.stdin.read()
+    else:
+        f = open(in_file)
+        data = f.read()
+        f.close()
+
+    result = parser.parse(data, debug=args.d)
+    if args.j:
+        print(lex.join(iter_tokens(result)))
