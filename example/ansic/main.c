@@ -8,6 +8,7 @@
 
 int main(int argc, char **argv)
 {
+	int a[10] = {0, 1};
     /* this is another single line comment */
 	switch (A(argc)) {
 	case 1:
