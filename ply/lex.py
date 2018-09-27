@@ -1069,6 +1069,16 @@ def lex(module=None, object=None, debug=False, optimize=False, lextab='lextab',
     return lexobj
 
 # -----------------------------------------------------------------------------
+# join()
+#
+# This joins the token sequence into a string taking ignored prefix of each
+# token into account.
+# -----------------------------------------------------------------------------
+
+def join(toks):
+    return "".join((tok.prefix + tok.value) for tok in toks)
+
+# -----------------------------------------------------------------------------
 # runmain()
 #
 # This runs the lexer as a main program
