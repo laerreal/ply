@@ -258,6 +258,7 @@ class Lexer:
         self.lexdata = s
         self.lexpos = 0
         self.lexlen = len(s)
+        self.ignored = ""
 
     # ------------------------------------------------------------
     # begin() - Changes the lexing state
@@ -310,11 +311,14 @@ class Lexer:
         lexlen    = self.lexlen
         lexignore = self.lexignore
         lexdata   = self.lexdata
+        ignored   = self.ignored
 
         while lexpos < lexlen:
             # This code provides some short-circuit code for whitespace, tabs, and other ignored characters
-            if lexdata[lexpos] in lexignore:
+            l = lexdata[lexpos]
+            if l in lexignore:
                 lexpos += 1
+                ignored += l
                 continue
 
             # Look for a regular expression match
@@ -336,9 +340,12 @@ class Lexer:
                     # If no token type was set, it's an ignored token
                     if tok.type:
                         self.lexpos = m.end()
+                        tok.prefix = ignored
+                        self.ignored = ""
                         return tok
                     else:
                         lexpos = m.end()
+                        ignored += tok.value
                         break
 
                 lexpos = m.end()
@@ -355,15 +362,19 @@ class Lexer:
                 if not newtok:
                     lexpos    = self.lexpos         # This is here in case user has updated lexpos.
                     lexignore = self.lexignore      # This is here in case there was a state change
+                    ignored += tok.value
                     break
 
                 # Verify type of the token.  If not in the token map, raise an error
                 if not self.lexoptimize:
                     if newtok.type not in self.lextokens_all:
+                        self.ignored = ignored
                         raise LexError("%s:%d: Rule '%s' returned an unknown token type '%s'" % (
                             func.__code__.co_filename, func.__code__.co_firstlineno,
                             func.__name__, newtok.type), lexdata[lexpos:])
 
+                newtok.prefix = ignored
+                self.ignored = ""
                 return newtok
             else:
                 # No match, see if in literals
@@ -374,6 +385,8 @@ class Lexer:
                     tok.type = tok.value
                     tok.lexpos = lexpos
                     self.lexpos = lexpos + 1
+                    tok.prefix = ignored
+                    self.ignored = ""
                     return tok
 
                 # No match. Call t_error() if defined.
@@ -387,14 +400,19 @@ class Lexer:
                     self.lexpos = lexpos
                     newtok = self.lexerrorf(tok)
                     if lexpos == self.lexpos:
+                        self.ignored = ignored
                         # Error method didn't change text position at all. This is an error.
                         raise LexError("Scanning error. Illegal character '%s'" % (lexdata[lexpos]), lexdata[lexpos:])
                     lexpos = self.lexpos
                     if not newtok:
+                        ignored += tok.value
                         continue
+                    newtok.prefix = ignored
+                    self.ignored = ""
                     return newtok
 
                 self.lexpos = lexpos
+                self.ignored = ignored
                 raise LexError("Illegal character '%s' at index %d" % (lexdata[lexpos], lexpos), lexdata[lexpos:])
 
         if self.lexeoff:
@@ -406,8 +424,11 @@ class Lexer:
             tok.lexer = self
             self.lexpos = lexpos
             newtok = self.lexeoff(tok)
+            newtok.prefix = ignored
+            self.ignored = ""
             return newtok
 
+        self.ignored = ignored
         self.lexpos = lexpos + 1
         if self.lexdata is None:
             raise RuntimeError('No input string given with input()')
