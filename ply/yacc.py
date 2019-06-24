@@ -3148,6 +3148,8 @@ class ParserReflect(object):
             p_function[3]))
         self.pfuncs = p_functions
 
+        print("\n".join(str(f) for f in p_functions))
+
     # Validate all of the p_functions
     def validate_pfunctions(self):
         grammar = []
