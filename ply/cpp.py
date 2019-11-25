@@ -799,6 +799,9 @@ class Preprocessor(object):
         else:
             print("Couldn't find '%s'" % filename)
 
+            if "all_inclusions" in dir(self):
+                self.on_include(self.source, filename, is_global)
+
     # ----------------------------------------------------------------------
     # define()
     #
