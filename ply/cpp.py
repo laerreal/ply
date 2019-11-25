@@ -846,6 +846,9 @@ class Preprocessor(object):
         else:
             print("Couldn't find '%s'" % filename)
 
+            if "all_inclusions" in dir(self) and self.all_inclusions and "on_include" in dir(self):
+                self.on_include(self.source, filename, is_global)
+
     # ----------------------------------------------------------------------
     # read_include_file()
     #
