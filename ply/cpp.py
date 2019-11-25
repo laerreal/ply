@@ -641,7 +641,7 @@ class Preprocessor(object):
                 while tokens[i].value[-1] not in "0123456789abcdefABCDEF":
                     tokens[i].value = tokens[i].value[:-1]
 
-        return self.evalexpr_string("".join([str(x.value) for x in tokens]))
+        return self.evalexpr_string("".join([str(x.value) for x in tokens]),tokens[0].lineno)
 
     # ----------------------------------------------------------------------
     # evalexpr_string()
@@ -649,7 +649,7 @@ class Preprocessor(object):
     # Helper for evalexpr that evaluates a string expression
     # This implementation does basic C->python conversion and then uses eval()
     # ----------------------------------------------------------------------
-    def evalexpr_string(self, expr):
+    def evalexpr_string(self, expr,lineno):
         expr = expr.replace("&&"," and ")
         expr = expr.replace("||"," or ")
         expr = expr.replace("!"," not ")
@@ -657,7 +657,7 @@ class Preprocessor(object):
         try:
             result = eval(expr)
         except Exception:
-            self.error(self.source,tokens[0].lineno,"Couldn't evaluate expression")
+            self.error(self.source,lineno,"Couldn't evaluate expression")
             result = 0
         return result
 
