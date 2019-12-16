@@ -941,9 +941,14 @@ Given a string of text, tokenize into a list of tokens.
     # include files
     # ----------------------------------------------------------------------
 
-    def read_include_file(self, filepath):
-        with open(filepath, 'r', encoding='utf-8', errors='surrogateescape') as file:
-            return file.read()
+    if sys.version_info.major < 3:
+        def read_include_file(self, filepath):
+            with open(filepath) as file:
+                return file.read()
+    else:
+        def read_include_file(self, filepath):
+            with open(filepath, 'r', encoding='utf-8', errors='surrogateescape') as file:
+                return file.read()
 
     # ----------------------------------------------------------------------
     # define()
