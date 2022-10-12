@@ -120,6 +120,7 @@ from os.path import (
     join,
 )
 import time
+import warnings
 
 # -----------------------------------------------------------------------------
 # trigraph()
@@ -744,7 +745,9 @@ Given a string of text, tokenize into a list of tokens.
         expr = expr.replace("!", " not ")
         expr = expr.replace(" not =", " !=")
         try:
-            result = eval(expr)
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                result = eval(expr)
         except Exception:
             self.error(
                 self.source,
