@@ -117,6 +117,7 @@ import re
 import copy
 import time
 import os.path
+import warnings
 
 # -----------------------------------------------------------------------------
 # trigraph()
@@ -653,7 +654,9 @@ class Preprocessor(object):
         expr = expr.replace("!"," not ")
         expr = expr.replace(" not ="," !=")
         try:
-            result = eval(expr)
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                result = eval(expr)
         except Exception:
             self.error(self.source,tokens[0].lineno,"Couldn't evaluate expression")
             result = 0
