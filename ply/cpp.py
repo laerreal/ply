@@ -420,41 +420,57 @@ class Preprocessor(object):
     # right away where to apply patches to the value to form the expansion
     # ----------------------------------------------------------------------
 
-    def macro_prescan(self,macro):
-        macro.patch     = []             # Standard macro arguments
-        macro.str_patch = []             # String conversion expansion
-        macro.var_comma_patch = []       # Variadic macro comma patch
+    def macro_prescan(self, macro):
+        # Standard macro arguments
+        macro.patch = patch = []
+        # String conversion expansion
+        macro.str_patch = str_patch = []
+        # Variadic macro comma patch
+        macro.var_comma_patch = var_comma_patch = []
+
+        # cache
+        variadic = macro.variadic
+        vararg = macro.vararg
+        arglist = macro.arglist
+        value = macro.value
+
         i = 0
-        while i < len(macro.value):
-            if macro.value[i].type == self.t_ID and macro.value[i].value in macro.arglist:
-                argnum = macro.arglist.index(macro.value[i].value)
+        while i < len(value):
+            t = value[i]
+            if t.type == self.t_ID and t.value in arglist:
+                argnum = arglist.index(t.value)
                 # Conversion of argument to a string
-                if i > 0 and macro.value[i-1].value == '#':
-                    macro.value[i] = copy.copy(macro.value[i])
-                    macro.value[i].type = self.t_STRING
-                    del macro.value[i-1]
-                    macro.str_patch.append((argnum,i-1))
+                if i > 0 and value[i - 1].value == '#':
+                    value[i] = copy.copy(t)
+                    value[i].type = self.t_STRING
+                    del value[i - 1]
+                    str_patch.append((argnum, i - 1))
                     continue
                 # Concatenation
-                elif (i > 0 and macro.value[i-1].value == '##'):
-                    macro.patch.append(('c',argnum,i-1))
-                    del macro.value[i-1]
+                elif (i > 0 and value[i - 1].value == '##'):
+                    patch.append(('c', argnum, i - 1))
+                    del value[i - 1]
                     i -= 1
                     continue
-                elif ((i+1) < len(macro.value) and macro.value[i+1].value == '##'):
-                    macro.patch.append(('c',argnum,i))
-                    del macro.value[i + 1]
+                elif ((i + 1) < len(value) and value[i + 1].value == '##'):
+                    patch.append(('c', argnum, i))
+                    del value[i + 1]
                     continue
                 # Standard expansion
                 else:
-                    macro.patch.append(('e',argnum,i))
-            elif macro.value[i].value == '##':
-                if macro.variadic and (i > 0) and (macro.value[i-1].value == ',') and \
-                        ((i+1) < len(macro.value)) and (macro.value[i+1].type == self.t_ID) and \
-                        (macro.value[i+1].value == macro.vararg):
-                    macro.var_comma_patch.append(i-1)
+                    patch.append(('e', argnum, i))
+            elif variadic and t.value == '##':
+                if (
+                       (i > 0)
+                   and (value[i - 1].value == ',')
+                   and ((i + 1) < len(value))
+                   and (value[i + 1].type == self.t_ID)
+                   and (value[i + 1].value == vararg)
+                ):
+                    var_comma_patch.append(i - 1)
             i += 1
-        macro.patch.sort(key=lambda x: x[2],reverse=True)
+
+        patch.sort(key = lambda x: x[2], reverse = True)
 
     # ----------------------------------------------------------------------
     # macro_expand_args()
