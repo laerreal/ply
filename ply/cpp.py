@@ -241,28 +241,28 @@ Given a string of text, tokenize into a list of tokens.
         """
         print("%s:%d %s" % (file, line, msg))
 
-    # ----------------------------------------------------------------------
-    # lexprobe()
-    #
-    # This method probes the preprocessor lexer object to discover
-    # the token types of symbols that are important to the preprocessor.
-    # If this works right, the preprocessor will simply "work"
-    # with any suitable lexer regardless of how tokens have been named.
-    # ----------------------------------------------------------------------
-
     def lexprobe(self):
+        """ This method probes the preprocessor lexer object to discover
+the token types of symbols that are important to the preprocessor.
+If this works right, the preprocessor will simply "work" with any suitable
+lexer regardless of how tokens have been named.
+        """
+
+        # cache
+        set_lexer_input = self.lexer.input
+        get_next_token = self.lexer.token
 
         # Determine the token type for identifiers
-        self.lexer.input("identifier")
-        tok = self.lexer.token()
+        set_lexer_input("identifier")
+        tok = get_next_token()
         if not tok or tok.value != "identifier":
             print("Couldn't determine identifier type")
         else:
             self.t_ID = tok.type
 
         # Determine the token type for integers
-        self.lexer.input("12345")
-        tok = self.lexer.token()
+        set_lexer_input("12345")
+        tok = get_next_token()
         if not tok or int(tok.value) != 12345:
             print("Couldn't determine integer type")
         else:
@@ -270,24 +270,24 @@ Given a string of text, tokenize into a list of tokens.
             self.t_INTEGER_TYPE = type(tok.value)
 
         # Determine the token type for strings enclosed in double quotes
-        self.lexer.input("\"filename\"")
-        tok = self.lexer.token()
-        if not tok or tok.value != "\"filename\"":
+        set_lexer_input('"filename"')
+        tok = get_next_token()
+        if not tok or tok.value != '"filename"':
             print("Couldn't determine string type")
         else:
             self.t_STRING = tok.type
 
-        # Determine the token type for whitespace--if any
-        self.lexer.input("  ")
-        tok = self.lexer.token()
+        # Determine the token type for whitespace -- if any
+        set_lexer_input("  ")
+        tok = get_next_token()
         if not tok or tok.value != "  ":
             self.t_SPACE = None
         else:
             self.t_SPACE = tok.type
 
         # Determine the token type for newlines
-        self.lexer.input("\n")
-        tok = self.lexer.token()
+        set_lexer_input("\n")
+        tok = get_next_token()
         if not tok or tok.value != "\n":
             self.t_NEWLINE = None
             print("Couldn't determine token for newlines")
@@ -297,10 +297,10 @@ Given a string of text, tokenize into a list of tokens.
         self.t_WS = (self.t_SPACE, self.t_NEWLINE)
 
         # Check for other characters used by the preprocessor
-        chars = [ '<','>','#','##','\\','(',')',',','.']
+        chars = ('<', '>', '#', '##', '\\', '(', ')', ',', '.')
         for c in chars:
-            self.lexer.input(c)
-            tok = self.lexer.token()
+            set_lexer_input(c)
+            tok = get_next_token()
             if not tok or tok.value != c:
                 print("Unable to lex '%s' required for preprocessor" % c)
 
