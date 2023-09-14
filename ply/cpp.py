@@ -114,7 +114,9 @@ def t_error(t):
     return t
 
 import re
-import copy
+from copy import (
+    copy,
+)
 from os.path import (
     dirname,
     join,
@@ -153,7 +155,7 @@ _trigraph_rep = {
 }
 
 
-copy_tokens = lambda tokens : list(map(copy.copy, tokens))
+copy_tokens = lambda tokens : list(map(copy, tokens))
 
 _trigraph_pat_sub = lambda g: _trigraph_rep[g.group()[-1]]
 
@@ -458,7 +460,7 @@ Given a string of text, tokenize into a list of tokens.
                 argnum = arglist.index(t.value)
                 # Conversion of argument to a string
                 if i > 0 and value[i - 1].value == '#':
-                    value[i] = copy.copy(t)
+                    value[i] = copy(t)
                     value[i].type = self.t_STRING
                     del value[i - 1]
                     str_patch.append((argnum, i - 1))
@@ -722,11 +724,11 @@ its macros and defined(...) expressions expanded by evalexpr.
         """
         for i, t in enumerate(tokens):
             if t.type == self.t_ID:
-                tokens[i] = copy.copy(t)
+                tokens[i] = copy(t)
                 tokens[i].type = self.t_INTEGER
                 tokens[i].value = self.t_INTEGER_TYPE("0")
             elif t.type == self.t_INTEGER:
-                tokens[i] = copy.copy(t)
+                tokens[i] = copy(t)
                 # Strip off any trailing suffixes
                 value = str(tokens[i].value)
                 while value[-1] not in "0123456789abcdefABCDEF":
