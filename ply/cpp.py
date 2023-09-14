@@ -1076,10 +1076,10 @@ if __name__ == '__main__':
     # Run a preprocessor
     import sys
     with open(sys.argv[1]) as f:
-        input = f.read()
+        data = f.read()
 
     p = Preprocessor(lexer)
-    p.parse(input,sys.argv[1])
+    p.parse(data, sys.argv[1])
     while True:
         tok = p.token()
         if not tok: break
