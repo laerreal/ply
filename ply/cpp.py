@@ -35,12 +35,35 @@
 
 # This module implements an ANSI-C style lexical preprocessor for PLY.
 # -----------------------------------------------------------------------------
-from __future__ import generators
+from __future__ import (
+    generators,
+)
 
-import sys
+from copy import (
+    copy,
+)
+from os.path import (
+    dirname,
+    join,
+)
+from re import (
+    compile as compile_re,
+)
+from sys import (
+    version_info,
+)
+from time import (
+    localtime,
+    strftime,
+)
+from warnings import (
+    catch_warnings,
+    simplefilter,
+)
+
 
 # Some Python 3 compatibility shims
-if sys.version_info.major < 3:
+if version_info.major < 3:
     STRING_TYPES = (str, unicode)
 else:
     STRING_TYPES = str
@@ -113,16 +136,6 @@ def t_error(t):
     t.lexer.skip(1)
     return t
 
-import re
-from copy import (
-    copy,
-)
-from os.path import (
-    dirname,
-    join,
-)
-import time
-import warnings
 
 # -----------------------------------------------------------------------------
 # trigraph()
@@ -141,7 +154,7 @@ import warnings
 #     ??-    ~
 # -----------------------------------------------------------------------------
 
-_trigraph_pat = re.compile(r'''\?\?[=/\'\(\)\!<>\-]''')
+_trigraph_pat = compile_re(r'''\?\?[=/\'\(\)\!<>\-]''')
 _trigraph_rep = {
     '=':'#',
     '/':'\\',
@@ -212,9 +225,9 @@ Contains macro definitions, include directories, and other information.
         # Probe the lexer for selected tokens
         self.lexprobe()
 
-        tm = time.localtime()
-        self.define('__DATE__ "%s"' % time.strftime("%b %d %Y",tm))
-        self.define('__TIME__ "%s"' % time.strftime("%H:%M:%S",tm))
+        tm = localtime()
+        self.define('__DATE__ "%s"' % strftime("%b %d %Y",tm))
+        self.define('__TIME__ "%s"' % strftime("%H:%M:%S",tm))
         self.parser = None
 
     def tokenize(self, text):
@@ -760,8 +773,8 @@ This implementation does basic C->python conversion and then uses eval().
         expr = expr.replace("!", " not ")
         expr = expr.replace(" not =", " !=")
         try:
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
+            with catch_warnings():
+                simplefilter("ignore")
                 result = eval(expr)
         except Exception:
             self.error(
@@ -969,7 +982,7 @@ This implementation does basic C->python conversion and then uses eval().
             print("Couldn't find '%s'" % filename)
 
 
-    if sys.version_info.major < 3:
+    if version_info.major < 3:
         def read_include_file(self, filepath):
             with open(filepath) as file:
                 return file.read()
@@ -987,6 +1000,7 @@ Could be overridden to e.g. customize encoding, limit access to
 certain paths on the filesystem, or provide the contents of system
 include files.
     """
+
 
     def define(self, tokens):
         """ Define a new macro.
