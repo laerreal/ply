@@ -547,7 +547,7 @@ This is used to prevent infinite recursion.
 
         # cache
         macros = self.macros
-        t_WS = self.t_WS
+        WS = self.t_WS
 
         if expanded is None:
             expanded = set()
@@ -569,7 +569,7 @@ This is used to prevent infinite recursion.
                 if arglist:
                     # A macro with arguments
                     j = i + 1
-                    while j < len(tokens) and tokens[j].type in t_WS:
+                    while j < len(tokens) and tokens[j].type in WS:
                         j += 1
 
                     if j < len(tokens) and tokens[j].value == '(':
@@ -662,24 +662,24 @@ evaluating integral expressions.
         """
 
         # cache
-        t_ID = self.t_ID
-        t_WS = self.t_WS
+        ID = self.t_ID
+        WS = self.t_WS
         macros = self.macros
 
         # Search for defined macros
         i = 0
         while i < len(tokens):
             ti = tokens[i]
-            if ti.type == t_ID and ti.value == 'defined':
+            if ti.type == ID and ti.value == 'defined':
                 j = i + 1
                 needparen = False
                 result = "0L"
                 while j < len(tokens):
                     tj = tokens[j]
-                    if tj.type in t_WS:
+                    if tj.type in WS:
                         j += 1
                         continue
-                    elif tj.type == t_ID:
+                    elif tj.type == ID:
                         if tj.value in macros:
                             result = "1L"
                         else:
@@ -711,15 +711,15 @@ its macros and defined(...) expressions expanded by evalexpr.
         """
 
         # cache
-        t_ID = self.t_ID
-        t_INTEGER = self.t_INTEGER
+        ID = self.t_ID
+        INTEGER = self.t_INTEGER
 
         for i, t in enumerate(tokens):
-            if t.type == t_ID:
+            if t.type == ID:
                 tokens[i] = copy(t)
-                tokens[i].type = t_INTEGER
+                tokens[i].type = INTEGER
                 tokens[i].value = self.t_INTEGER_TYPE("0")
-            elif t.type == t_INTEGER:
+            elif t.type == INTEGER:
                 tokens[i] = copy(t)
                 # Strip off any trailing suffixes
                 value = str(tokens[i].value)
