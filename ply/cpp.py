@@ -491,16 +491,12 @@ Given a string of text, tokenize into a list of tokens.
 
         patch.sort(key = lambda x: x[2], reverse = True)
 
-    # ----------------------------------------------------------------------
-    # macro_expand_args()
-    #
-    # Given a Macro and list of arguments (each a token list), this method
-    # returns an expanded version of a macro.
-    # The return value is a token sequence representing the replacement
-    # macro tokens.
-    # ----------------------------------------------------------------------
-
     def macro_expand_args(self, macro, args, *ctx):
+        """ Given a Macro and list of arguments (each a token list), this
+method returns an expanded version of a macro.
+The return value is a token sequence representing the replacement macro tokens.
+        """
+
         rep = copy_tokens(macro.value)
 
         # Make string expansion patches.
