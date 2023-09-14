@@ -1039,16 +1039,12 @@ include files.
         except LookupError:
             print("Bad macro definition")
 
-    # ----------------------------------------------------------------------
-    # undef()
-    #
-    # Undefine a macro
-    # ----------------------------------------------------------------------
-
-    def undef(self,tokens):
-        id = tokens[0].value
+    def undef(self, tokens):
+        """ Undefine a macro.
+        """
+        name = tokens[0].value
         try:
-            del self.macros[id]
+            del self.macros[name]
         except LookupError:
             pass
 
