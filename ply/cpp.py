@@ -659,8 +659,7 @@ class Preprocessor(object):
     # integral expressions.
     # ----------------------------------------------------------------------
 
-    def evalexpr(self,tokens):
-        # tokens = tokenize(line)
+    def evalexpr(self, tokens):
         # Search for defined macros
         i = 0
         while i < len(tokens):
@@ -677,18 +676,24 @@ class Preprocessor(object):
                             result = "1L"
                         else:
                             result = "0L"
-                        if not needparen: break
+                        if not needparen:
+                            break
                     elif tokens[j].value == '(':
                         needparen = True
                     elif tokens[j].value == ')':
                         break
                     else:
-                        self.error(self.source,tokens[i].lineno,"Malformed defined()")
+                        self.error(
+                            self.source,
+                            tokens[i].lineno,
+                            "Malformed defined()"
+                        )
                     j += 1
                 tokens[i].type = self.t_INTEGER
                 tokens[i].value = self.t_INTEGER_TYPE(result)
-                del tokens[i+1:j+1]
+                del tokens[i + 1:j + 1]
             i += 1
+
         tokens = self.expand_macros(tokens)
         return self.evalexpr_expanded(tokens)
 
