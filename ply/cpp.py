@@ -151,9 +151,10 @@ _trigraph_rep = {
 
 copy_tokens = lambda tokens : list(map(copy.copy, tokens))
 
+_trigraph_pat_sub = lambda g: _trigraph_rep[g.group()[-1]]
 
-def trigraph(input):
-    return _trigraph_pat.sub(lambda g: _trigraph_rep[g.group()[-1]],input)
+def trigraph(s):
+    return _trigraph_pat.sub(_trigraph_pat_sub, s)
 
 
 class Macro(object):
