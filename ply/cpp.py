@@ -940,8 +940,8 @@ class Preprocessor(object):
     # Define a new macro
     # ----------------------------------------------------------------------
 
-    def define(self,tokens):
-        if isinstance(tokens,STRING_TYPES):
+    def define(self, tokens):
+        if isinstance(tokens, STRING_TYPES):
             tokens = self.tokenize(tokens)
 
         linetok = tokens
@@ -952,19 +952,21 @@ class Preprocessor(object):
             else:
                 mtype = None
             if not mtype:
-                m = Macro(name.value,[])
+                m = Macro(name.value, [])
                 self.macros[name.value] = m
             elif mtype.type in self.t_WS:
                 # A normal macro
-                m = Macro(name.value,self.tokenstrip(linetok[2:]))
+                m = Macro(name.value, self.tokenstrip(linetok[2:]))
                 self.macros[name.value] = m
             elif mtype.value == '(':
                 # A macro with arguments
-                tokcount, args, positions = self.collect_args(linetok[1:])
+                tokcount, args, __ = self.collect_args(linetok[1:])
                 variadic = False
                 for a in args:
                     if variadic:
-                        print("No more arguments may follow a variadic argument")
+                        print("No more arguments"
+                              " may follow a variadic argument"
+                        )
                         break
                     astr = "".join([str(_i.value) for _i in a])
                     if astr == "...":
@@ -977,8 +979,9 @@ class Preprocessor(object):
                     elif astr[-3:] == "..." and a[0].type == self.t_ID:
                         variadic = True
                         del a[1:]
-                        # If, for some reason, "." is part of the identifier, strip off the name for the purposes
-                        # of macro expansion
+                        # If, for some reason, "." is part of the identifier,
+                        # strip off the name for
+                        # the purposes of macro expansion
                         if a[0].value[-3:] == '...':
                             a[0].value = a[0].value[:-3]
                         continue
@@ -986,17 +989,28 @@ class Preprocessor(object):
                         print("Invalid macro argument")
                         break
                 else:
-                    mvalue = self.tokenstrip(linetok[1+tokcount:])
+                    mvalue = self.tokenstrip(linetok[1 + tokcount:])
                     i = 0
-                    while i < len(mvalue):
-                        if i+1 < len(mvalue):
-                            if mvalue[i].type in self.t_WS and mvalue[i+1].value == '##':
-                                del mvalue[i]
-                                continue
-                            elif mvalue[i].value == '##' and mvalue[i+1].type in self.t_WS:
-                                del mvalue[i+1]
+                    while i < (len(mvalue) - 1):
+                        if (
+                            mvalue[i].type in self.t_WS
+                            and mvalue[i + 1].value == '##'
+                        ):
+                            del mvalue[i]
+                            continue
+                        elif (
+                            mvalue[i].value == '##'
+                            and mvalue[i + 1].type in self.t_WS
+                        ):
+                            del mvalue[i + 1]
                         i += 1
-                    m = Macro(name.value,mvalue,[x[0].value for x in args],variadic)
+
+                    m = Macro(
+                        name.value,
+                        mvalue,
+                        [x[0].value for x in args],
+                        variadic
+                    )
                     self.macro_prescan(m)
                     self.macros[name.value] = m
             else:
