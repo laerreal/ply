@@ -115,8 +115,11 @@ def t_error(t):
 
 import re
 import copy
+from os.path import (
+    dirname,
+    join,
+)
 import time
-import os.path
 
 # -----------------------------------------------------------------------------
 # trigraph()
@@ -881,49 +884,48 @@ Given a string of text, tokenize into a list of tokens.
             yield tok
         chunk = []
 
-    # ----------------------------------------------------------------------
-    # include()
-    #
-    # Implementation of file-inclusion
-    # ----------------------------------------------------------------------
-
-    def include(self,tokens):
+    def include(self, tokens):
+        """ Implementation of file-inclusion.
+        """
         # Try to extract the filename and then process an include file
-        if not tokens:
-            return
+
         if tokens:
-            if tokens[0].value != '<' and tokens[0].type != self.t_STRING:
+            # cache
+            temp_path = self.temp_path
+            t0 = tokens[0]
+
+            if t0.value != '<' and t0.type != self.t_STRING:
                 tokens = self.expand_macros(tokens)
 
-            if tokens[0].value == '<':
+            if t0.value == '<':
                 # Include <...>
-                i = 1
-                while i < len(tokens):
-                    if tokens[i].value == '>':
+                for i, t in enumerate(tokens):
+                    if t.value == ">":
                         break
-                    i += 1
                 else:
                     print("Malformed #include <...>")
-                    return
-                filename = "".join([x.value for x in tokens[1:i]])
-                path = self.path + [""] + self.temp_path
-            elif tokens[0].type == self.t_STRING:
-                filename = tokens[0].value[1:-1]
-                path = self.temp_path + [""] + self.path
+                filename = "".join(x.value for x in tokens[1:i])
+                path = self.path + [""] + temp_path
+            elif t0.type == self.t_STRING:
+                filename = t0.value[1:-1]
+                path = temp_path + [""] + self.path
             else:
                 print("Malformed #include statement")
                 return
+        else:
+            return
+
         for p in path:
-            iname = os.path.join(p,filename)
+            iname = join(p, filename)
             try:
                 data = self.read_include_file(iname)
-                dname = os.path.dirname(iname)
+                dname = dirname(iname)
                 if dname:
-                    self.temp_path.insert(0,dname)
-                for tok in self.parsegen(data,filename):
+                    temp_path.insert(0, dname)
+                for tok in self.parsegen(data, filename):
                     yield tok
                 if dname:
-                    del self.temp_path[0]
+                    del temp_path[0]
                 break
             except IOError:
                 pass
