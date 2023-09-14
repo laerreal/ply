@@ -209,19 +209,23 @@ class Preprocessor(object):
         self.define("__TIME__ \"%s\"" % time.strftime("%H:%M:%S",tm))
         self.parser = None
 
-    # -----------------------------------------------------------------------------
-    # tokenize()
-    #
-    # Utility function. Given a string of text, tokenize into a list of tokens
-    # -----------------------------------------------------------------------------
-
-    def tokenize(self,text):
+    def tokenize(self, text):
+        """ Utility function.
+Given a string of text, tokenize into a list of tokens.
+        """
         tokens = []
+
         self.lexer.input(text)
-        while True:
-            tok = self.lexer.token()
-            if not tok: break
-            tokens.append(tok)
+
+        # cache
+        token = self.lexer.token
+        append = tokens.append
+
+        tok = token()
+        while tok:
+            append(tok)
+            tok = token()
+
         return tokens
 
     # ---------------------------------------------------------------------
