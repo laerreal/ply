@@ -722,12 +722,17 @@ evaluating integral expressions.
         """ Helper for evalexpr that evaluates the expression that had
 its macros and defined(...) expressions expanded by evalexpr.
         """
+
+        # cache
+        t_ID = self.t_ID
+        t_INTEGER = self.t_INTEGER
+
         for i, t in enumerate(tokens):
-            if t.type == self.t_ID:
+            if t.type == t_ID:
                 tokens[i] = copy(t)
-                tokens[i].type = self.t_INTEGER
+                tokens[i].type = t_INTEGER
                 tokens[i].value = self.t_INTEGER_TYPE("0")
-            elif t.type == self.t_INTEGER:
+            elif t.type == t_INTEGER:
                 tokens[i] = copy(t)
                 # Strip off any trailing suffixes
                 value = str(tokens[i].value)
