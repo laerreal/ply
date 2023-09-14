@@ -975,13 +975,9 @@ certain paths on the filesystem, or provide the contents of system
 include files.
     """
 
-    # ----------------------------------------------------------------------
-    # define()
-    #
-    # Define a new macro
-    # ----------------------------------------------------------------------
-
     def define(self, tokens):
+        """ Define a new macro.
+        """
         if isinstance(tokens, STRING_TYPES):
             tokens = self.tokenize(tokens)
 
