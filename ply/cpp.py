@@ -148,6 +148,10 @@ _trigraph_rep = {
     '-':'~'
 }
 
+
+copy_tokens = lambda tokens : list(map(copy.copy, tokens))
+
+
 def trigraph(input):
     return _trigraph_pat.sub(lambda g: _trigraph_rep[g.group()[-1]],input)
 
@@ -482,8 +486,7 @@ class Preprocessor(object):
     # ----------------------------------------------------------------------
 
     def macro_expand_args(self, macro, args, *ctx):
-        # Make a copy of the macro token sequence
-        rep = [copy.copy(_x) for _x in macro.value]
+        rep = copy_tokens(macro.value)
 
         # Make string expansion patches.
         # These do not alter the length of the replacement sequence
