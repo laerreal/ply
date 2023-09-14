@@ -712,14 +712,10 @@ Given a string of text, tokenize into a list of tokens.
         tokens = self.expand_macros(tokens)
         return self.evalexpr_expanded(tokens)
 
-    # ----------------------------------------------------------------------
-    # evalexpr_expanded()
-    #
-    # Helper for evalexpr that evaluates the expression that had its macros
-    # and defined(...) expressions expanded by evalexpr
-    # ----------------------------------------------------------------------
-
     def evalexpr_expanded(self, tokens):
+        """ Helper for evalexpr that evaluates the expression that had
+its macros and defined(...) expressions expanded by evalexpr.
+        """
         for i, t in enumerate(tokens):
             if t.type == self.t_ID:
                 tokens[i] = copy.copy(t)
@@ -735,13 +731,10 @@ Given a string of text, tokenize into a list of tokens.
 
         return self.evalexpr_string("".join([str(x.value) for x in tokens]))
 
-    # ----------------------------------------------------------------------
-    # evalexpr_string()
-    #
-    # Helper for evalexpr that evaluates a string expression
-    # This implementation does basic C->python conversion and then uses eval()
-    # ----------------------------------------------------------------------
     def evalexpr_string(self, expr):
+        """ Helper for evalexpr that evaluates a string expression.
+This implementation does basic C->python conversion and then uses eval().
+        """
         expr = expr.replace("&&", " and ")
         expr = expr.replace("||", " or ")
         expr = expr.replace("!", " not ")
