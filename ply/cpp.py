@@ -1057,14 +1057,17 @@ include files.
     def token(self):
         """ Method to return individual tokens.
         """
-        try:
-            while True:
-                tok = next(self.parser)
-                if tok.type not in self.ignore:
-                    return tok
-        except StopIteration:
-            self.parser = None
-            return None
+        # cache
+        ignore = self.ignore
+
+        for tok in iter(self.parser):
+            if tok.type in ignore:
+                continue
+            return tok
+
+        self.parser = None
+        return None
+
 
 if __name__ == '__main__':
     import ply.lex as lex
