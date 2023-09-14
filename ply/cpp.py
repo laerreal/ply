@@ -137,22 +137,21 @@ def t_error(t):
     return t
 
 
-# -----------------------------------------------------------------------------
-# trigraph()
-#
-# Given an input string, this function replaces all trigraph sequences.
-# The following mapping is used:
-#
-#     ??=    #
-#     ??/    \
-#     ??'    ^
-#     ??(    [
-#     ??)    ]
-#     ??!    |
-#     ??<    {
-#     ??>    }
-#     ??-    ~
-# -----------------------------------------------------------------------------
+def trigraph(s):
+    """ Given an input string, this function replaces all trigraph sequences.
+The following mapping is used:
+
+  ??=    #
+  ??/    \
+  ??'    ^
+  ??(    [
+  ??)    ]
+  ??!    |
+  ??<    {
+  ??>    }
+  ??-    ~
+    """
+    return _trigraph_pat.sub(_trigraph_pat_sub, s)
 
 _trigraph_pat = compile_re(r'''\?\?[=/\'\(\)\!<>\-]''')
 _trigraph_rep = {
@@ -167,13 +166,7 @@ _trigraph_rep = {
     '-':'~'
 }
 
-
-copy_tokens = lambda tokens : list(map(copy, tokens))
-
 _trigraph_pat_sub = lambda g: _trigraph_rep[g.group()[-1]]
-
-def trigraph(s):
-    return _trigraph_pat.sub(_trigraph_pat_sub, s)
 
 
 class Macro(object):
@@ -206,6 +199,7 @@ during macro expansion.
 
 
 at_index_2 = lambda x: x[2]
+copy_tokens = lambda tokens : list(map(copy, tokens))
 
 class Preprocessor(object):
     """ Preprocessor object.
