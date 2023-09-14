@@ -667,45 +667,49 @@ Given a string of text, tokenize into a list of tokens.
 
         return tokens
 
-    # ----------------------------------------------------------------------
-    # evalexpr()
-    #
-    # Evaluate an expression token sequence for the purposes of evaluating
-    # integral expressions.
-    # ----------------------------------------------------------------------
-
     def evalexpr(self, tokens):
+        """ Evaluate an expression token sequence for the purposes of
+evaluating integral expressions.
+        """
+
+        # cache
+        t_ID = self.t_ID
+        t_WS = self.t_WS
+        macros = self.macros
+
         # Search for defined macros
         i = 0
         while i < len(tokens):
-            if tokens[i].type == self.t_ID and tokens[i].value == 'defined':
+            ti = tokens[i]
+            if ti.type == t_ID and ti.value == 'defined':
                 j = i + 1
                 needparen = False
                 result = "0L"
                 while j < len(tokens):
-                    if tokens[j].type in self.t_WS:
+                    tj = tokens[j]
+                    if tj.type in t_WS:
                         j += 1
                         continue
-                    elif tokens[j].type == self.t_ID:
-                        if tokens[j].value in self.macros:
+                    elif tj.type == t_ID:
+                        if tj.value in macros:
                             result = "1L"
                         else:
                             result = "0L"
                         if not needparen:
                             break
-                    elif tokens[j].value == '(':
+                    elif tj.value == '(':
                         needparen = True
-                    elif tokens[j].value == ')':
+                    elif tj.value == ')':
                         break
                     else:
                         self.error(
                             self.source,
-                            tokens[i].lineno,
+                            ti.lineno,
                             "Malformed defined()"
                         )
                     j += 1
-                tokens[i].type = self.t_INTEGER
-                tokens[i].value = self.t_INTEGER_TYPE(result)
+                ti.type = self.t_INTEGER
+                ti.value = self.t_INTEGER_TYPE(result)
                 del tokens[i + 1:j + 1]
             i += 1
 
