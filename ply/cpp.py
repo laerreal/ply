@@ -164,22 +164,26 @@ This object holds information about preprocessor macros.
 .name      - Macro name (string)
 .value     - Macro value (a list of tokens)
 .arglist   - List of argument names
-.variadic  - Boolean indicating whether or not variadic macro
-.vararg    - Name of the variadic parameter
+.vararg    - Name of the variadic parameter, None if macro is not variadic
 
 When a macro is created, the macro replacement token sequence is
 pre-scanned and used to create patch lists that are later used
 during macro expansion.
     """
 
-    def __init__(self, name, value, arglist = None, variadic = False):
+    vararg = None
+
+    def __init__(self, name, value, arglist = None, variadic = None):
         self.name = name
         self.value = value
         self.arglist = arglist
-        self.variadic = variadic
         if variadic:
             self.vararg = arglist[-1]
         self.source = None
+
+    @property
+    def variadic(self):
+        return self.vararg is not None
 
 # ------------------------------------------------------------------
 # Preprocessor object
@@ -433,7 +437,6 @@ class Preprocessor(object):
         macro.var_comma_patch = var_comma_patch = []
 
         # cache
-        variadic = macro.variadic
         vararg = macro.vararg
         arglist = macro.arglist
         value = macro.value
@@ -463,7 +466,7 @@ class Preprocessor(object):
                 # Standard expansion
                 else:
                     patch.append(('e', argnum, i))
-            elif variadic and t.value == '##':
+            elif vararg is not None and t.value == '##':
                 if (
                        (i > 0)
                    and (value[i - 1].value == ',')
@@ -501,7 +504,7 @@ class Preprocessor(object):
         # Make the variadic macro comma patch.
         # If the variadic macro argument is empty, we get rid
         comma_patch = False
-        if macro.variadic and not args[-1]:
+        if macro.vararg is not None and not args[-1]:
             for i in macro.var_comma_patch:
                 rep[i] = None
                 comma_patch = True
@@ -575,7 +578,9 @@ class Preprocessor(object):
                         tokcount, args, positions \
                             = self.collect_args(tokens[j:])
 
-                        if not m.variadic and len(args) !=  len(arglist):
+                        variadic = m.variadic
+
+                        if not variadic and len(args) != len(arglist):
                             self.error(
                                 self.source,
                                 t.lineno,
@@ -586,7 +591,7 @@ class Preprocessor(object):
                             )
                             i = j + tokcount
 
-                        elif m.variadic and len(args) < len(arglist) - 1:
+                        elif variadic and len(args) < len(arglist) - 1:
                             if len(arglist) > 2:
                                 self.error(
                                     self.source,
@@ -605,7 +610,7 @@ class Preprocessor(object):
                                 )
                             i = j + tokcount
                         else:
-                            if m.variadic:
+                            if variadic:
                                 if len(args) == len(arglist) - 1:
                                     args.append([])
                                 else:
