@@ -1054,16 +1054,14 @@ include files.
         self.ignore = ignore or {}
         self.parser = self.parsegen(text, source)
 
-    # ----------------------------------------------------------------------
-    # token()
-    #
-    # Method to return individual tokens
-    # ----------------------------------------------------------------------
     def token(self):
+        """ Method to return individual tokens.
+        """
         try:
             while True:
                 tok = next(self.parser)
-                if tok.type not in self.ignore: return tok
+                if tok.type not in self.ignore:
+                    return tok
         except StopIteration:
             self.parser = None
             return None
