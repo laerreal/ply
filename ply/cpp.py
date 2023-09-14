@@ -349,21 +349,23 @@ Given a string of text, tokenize into a list of tokens.
         if current_line:
             yield current_line
 
-    # ----------------------------------------------------------------------
-    # tokenstrip()
-    #
-    # Remove leading/trailing whitespace tokens from a token list
-    # ----------------------------------------------------------------------
+    def tokenstrip(self, tokens):
+        """ Remove leading/trailing whitespace tokens from a token list.
+        """
+        t_WS = self.t_WS
 
-    def tokenstrip(self,tokens):
-        i = 0
-        while i < len(tokens) and tokens[i].type in self.t_WS:
-            i += 1
-        del tokens[:i]
-        i = len(tokens)-1
-        while i >= 0 and tokens[i].type in self.t_WS:
-            i -= 1
-        del tokens[i+1:]
+        for i, t in enumerate(tokens):
+            if t.type not in t_WS:
+                del tokens[:i]
+                for i, t in enumerate(reversed(tokens)):
+                    if t.type not in t_WS:
+                        if i:
+                            del tokens[-i:]
+                        break
+                break
+        else:
+            del tokens[:]
+
         return tokens
 
 
