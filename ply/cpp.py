@@ -935,14 +935,6 @@ Given a string of text, tokenize into a list of tokens.
         else:
             print("Couldn't find '%s'" % filename)
 
-    # ----------------------------------------------------------------------
-    # read_include_file()
-    #
-    # Reads a source file for inclusion using #include
-    # Could be overridden to e.g. customize encoding, limit access to
-    # certain paths on the filesystem, or provide the contents of system
-    # include files
-    # ----------------------------------------------------------------------
 
     if sys.version_info.major < 3:
         def read_include_file(self, filepath):
@@ -950,8 +942,18 @@ Given a string of text, tokenize into a list of tokens.
                 return file.read()
     else:
         def read_include_file(self, filepath):
-            with open(filepath, 'r', encoding='utf-8', errors='surrogateescape') as file:
+            with open(filepath, 'r',
+                encoding = 'utf-8',
+                errors = 'surrogateescape'
+            ) as file:
                 return file.read()
+
+    read_include_file.__doc__ = """\
+Reads a source file for inclusion using #include
+Could be overridden to e.g. customize encoding, limit access to
+certain paths on the filesystem, or provide the contents of system
+include files.
+    """
 
     # ----------------------------------------------------------------------
     # define()
