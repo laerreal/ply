@@ -727,14 +727,18 @@ class Preprocessor(object):
     # This implementation does basic C->python conversion and then uses eval()
     # ----------------------------------------------------------------------
     def evalexpr_string(self, expr):
-        expr = expr.replace("&&"," and ")
-        expr = expr.replace("||"," or ")
-        expr = expr.replace("!"," not ")
-        expr = expr.replace(" not ="," !=")
+        expr = expr.replace("&&", " and ")
+        expr = expr.replace("||", " or ")
+        expr = expr.replace("!", " not ")
+        expr = expr.replace(" not =", " !=")
         try:
             result = eval(expr)
         except Exception:
-            self.error(self.source,tokens[0].lineno,"Couldn't evaluate expression")
+            self.error(
+                self.source,
+                tokens[0].lineno,
+                "Couldn't evaluate expression"
+            )
             result = 0
         return result
 
