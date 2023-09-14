@@ -539,72 +539,117 @@ class Preprocessor(object):
     #
     # Given a list of tokens, this function performs macro expansion.
     # The expanded argument is a dictionary that contains macros already
-    # expanded.  This is used to prevent infinite recursion.
+    # expanded.
+    # This is used to prevent infinite recursion.
     # ----------------------------------------------------------------------
 
-    def expand_macros(self,tokens,expanded=None):
+    def expand_macros(self, tokens, expanded = None):
+        # cache
+        macros = self.macros
+
         if expanded is None:
-            expanded = {}
+            expanded = set()
+
         i = 0
         while i < len(tokens):
             t = tokens[i]
-            if t.type == self.t_ID:
-                if t.value in self.macros and t.value not in expanded:
-                    # Yes, we found a macro match
-                    expanded[t.value] = True
+            if t.type != self.t_ID:
+                i += 1
+                continue
 
-                    m = self.macros[t.value]
-                    if not m.arglist:
-                        # A simple macro
-                        ex = self.expand_macros([copy.copy(_x) for _x in m.value],expanded)
-                        for e in ex:
-                            e.lineno = t.lineno
-                        tokens[i:i+1] = ex
-                        i += len(ex)
-                    else:
-                        # A macro with arguments
-                        j = i + 1
-                        while j < len(tokens) and tokens[j].type in self.t_WS:
-                            j += 1
-                        if j < len(tokens) and tokens[j].value == '(':
-                            tokcount,args,positions = self.collect_args(tokens[j:])
-                            if not m.variadic and len(args) !=  len(m.arglist):
-                                self.error(self.source,t.lineno,"Macro %s requires %d arguments" % (t.value,len(m.arglist)))
-                                i = j + tokcount
-                            elif m.variadic and len(args) < len(m.arglist)-1:
-                                if len(m.arglist) > 2:
-                                    self.error(self.source,t.lineno,"Macro %s must have at least %d arguments" % (t.value, len(m.arglist)-1))
-                                else:
-                                    self.error(self.source,t.lineno,"Macro %s must have at least %d argument" % (t.value, len(m.arglist)-1))
-                                i = j + tokcount
+            if t.value in macros and t.value not in expanded:
+                # Yes, we found a macro match
+                expanded.add(t.value)
+
+                m = macros[t.value]
+                arglist = m.arglist
+
+                if arglist:
+                    # A macro with arguments
+                    j = i + 1
+                    while j < len(tokens) and tokens[j].type in self.t_WS:
+                        j += 1
+
+                    if j < len(tokens) and tokens[j].value == '(':
+
+                        tokcount, args, positions \
+                            = self.collect_args(tokens[j:])
+
+                        if not m.variadic and len(args) !=  len(arglist):
+                            self.error(
+                                self.source,
+                                t.lineno,
+                                "Macro %s requires %d arguments" % (
+                                    t.value,
+                                    len(arglist),
+                                )
+                            )
+                            i = j + tokcount
+
+                        elif m.variadic and len(args) < len(arglist) - 1:
+                            if len(arglist) > 2:
+                                self.error(
+                                    self.source,
+                                    t.lineno,
+                                    "Macro %s must have"
+                                    " at least %d arguments" % (
+                                        t.value,
+                                        len(arglist) - 1),
+                                    )
                             else:
-                                if m.variadic:
-                                    if len(args) == len(m.arglist)-1:
-                                        args.append([])
-                                    else:
-                                        args[len(m.arglist)-1] = tokens[j+positions[len(m.arglist)-1]:j+tokcount-1]
-                                        del args[len(m.arglist):]
-
-                                # Get macro replacement text
-                                rep = self.macro_expand_args(m,args,expanded)
-                                rep = self.expand_macros(rep,expanded)
-                                for r in rep:
-                                    r.lineno = t.lineno
-                                tokens[i:j+tokcount] = rep
-                                i += len(rep)
+                                self.error(
+                                    self.source,
+                                    t.lineno,
+                                    "Macro %s must have"
+                                    " at least 1 argument" % (t.value,)
+                                )
+                            i = j + tokcount
                         else:
-                            # This is not a macro. It is just a word which
-                            # equals to name of the macro. Hence, go to the
-                            # next token.
-                            i += 1
+                            if m.variadic:
+                                if len(args) == len(arglist) - 1:
+                                    args.append([])
+                                else:
+                                    args[len(arglist) - 1] \
+                                        = tokens[
+                                            j + positions[len(arglist) - 1]
+                                            :
+                                            j + tokcount - 1  # except ')'
+                                        ]
+                                    del args[len(arglist):]
 
-                    del expanded[t.value]
-                    continue
-                elif t.value == '__LINE__':
-                    t.type = self.t_INTEGER
-                    t.value = self.t_INTEGER_TYPE(t.lineno)
+                            # Get macro replacement text
+                            rep = self.macro_expand_args(m, args, expanded)
+                            rep = self.expand_macros(rep, expanded)
+
+                            for r in rep:
+                                r.lineno = t.lineno
+
+                            tokens[i : j + tokcount] = rep
+                            i += len(rep)
+                    else:
+                        # This is not a macro. It is just a word which
+                        # equals to name of the macro. Hence, go to the
+                        # next token.
+                        i += 1
+                else:
+                    # A simple macro
+                    ex = self.expand_macros(copy_tokens(m.value), expanded)
+
+                    for e in ex:
+                        e.lineno = t.lineno
+
+                    tokens[i:i + 1] = ex
+                    i += len(ex)
+
+                expanded.remove(t.value)
+                continue
+
+            elif t.value == '__LINE__':
+                t.type = self.t_INTEGER
+                t.value = self.t_INTEGER_TYPE(t.lineno)
 
             i += 1
+
         return tokens
 
     # ----------------------------------------------------------------------
