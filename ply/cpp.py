@@ -1048,14 +1048,11 @@ include files.
         except LookupError:
             pass
 
-    # ----------------------------------------------------------------------
-    # parse()
-    #
-    # Parse input text.
-    # ----------------------------------------------------------------------
-    def parse(self,input,source=None,ignore={}):
-        self.ignore = ignore
-        self.parser = self.parsegen(input,source)
+    def parse(self, text, source = None, ignore = None):
+        """ Parse input text.
+        """
+        self.ignore = ignore or {}
+        self.parser = self.parsegen(text, source)
 
     # ----------------------------------------------------------------------
     # token()
