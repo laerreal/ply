@@ -304,13 +304,9 @@ lexer regardless of how tokens have been named.
             if not tok or tok.value != c:
                 print("Unable to lex '%s' required for preprocessor" % c)
 
-    # ----------------------------------------------------------------------
-    # add_path()
-    #
-    # Adds a search path to the preprocessor.
-    # ----------------------------------------------------------------------
-
     def add_path(self,path):
+        """ Adds a search path to the preprocessor.
+        """
         self.path.append(path)
 
     # ----------------------------------------------------------------------
