@@ -191,6 +191,9 @@ during macro expansion.
     def variadic(self):
         return self.vararg is not None
 
+
+at_index_2 = lambda x: x[2]
+
 # ------------------------------------------------------------------
 # Preprocessor object
 #
@@ -432,15 +435,11 @@ Given a string of text, tokenize into a list of tokens.
         self.error(self.source,tokenlist[-1].lineno,"Missing ')' in macro arguments")
         return 0, [],[]
 
-    # ----------------------------------------------------------------------
-    # macro_prescan()
-    #
-    # Examine the macro value (token sequence) and identify patch points
-    # This is used to speed up macro expansion later on---we'll know
-    # right away where to apply patches to the value to form the expansion
-    # ----------------------------------------------------------------------
-
     def macro_prescan(self, macro):
+        """ Examine the macro value (token sequence) and identify patch points.
+This is used to speed up macro expansion later on --- we'll know right away
+where to apply patches to the value to form the expansion.
+        """
         # Standard macro arguments
         macro.patch = patch = []
         # String conversion expansion
@@ -452,11 +451,12 @@ Given a string of text, tokenize into a list of tokens.
         vararg = macro.vararg
         arglist = macro.arglist
         value = macro.value
+        t_ID = self.t_ID
 
         i = 0
         while i < len(value):
             t = value[i]
-            if t.type == self.t_ID and t.value in arglist:
+            if t.type == t_ID and t.value in arglist:
                 argnum = arglist.index(t.value)
                 # Conversion of argument to a string
                 if i > 0 and value[i - 1].value == '#':
@@ -483,13 +483,13 @@ Given a string of text, tokenize into a list of tokens.
                        (i > 0)
                    and (value[i - 1].value == ',')
                    and ((i + 1) < len(value))
-                   and (value[i + 1].type == self.t_ID)
+                   and (value[i + 1].type == t_ID)
                    and (value[i + 1].value == vararg)
                 ):
                     var_comma_patch.append(i - 1)
             i += 1
 
-        patch.sort(key = lambda x: x[2], reverse = True)
+        patch.sort(key = at_index_2, reverse = True)
 
     def macro_expand_args(self, macro, args, *ctx):
         """ Given a Macro and list of arguments (each a token list), this
