@@ -194,19 +194,18 @@ during macro expansion.
 
 at_index_2 = lambda x: x[2]
 
-# ------------------------------------------------------------------
-# Preprocessor object
-#
-# Object representing a preprocessor.  Contains macro definitions,
-# include directories, and other information
-# ------------------------------------------------------------------
-
 class Preprocessor(object):
-    def __init__(self,lexer=None):
+    """ Preprocessor object.
+
+Object representing a preprocessor.
+Contains macro definitions, include directories, and other information.
+    """
+
+    def __init__(self, lexer = None):
         if lexer is None:
             lexer = lex.lexer
         self.lexer = lexer
-        self.macros = { }
+        self.macros = {}
         self.path = []
         self.temp_path = []
 
@@ -214,8 +213,8 @@ class Preprocessor(object):
         self.lexprobe()
 
         tm = time.localtime()
-        self.define("__DATE__ \"%s\"" % time.strftime("%b %d %Y",tm))
-        self.define("__TIME__ \"%s\"" % time.strftime("%H:%M:%S",tm))
+        self.define('__DATE__ "%s"' % time.strftime("%b %d %Y",tm))
+        self.define('__TIME__ "%s"' % time.strftime("%H:%M:%S",tm))
         self.parser = None
 
     def tokenize(self, text):
