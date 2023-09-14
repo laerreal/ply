@@ -380,24 +380,26 @@ text into a line-by-line format.
 
         return tokens
 
+    def collect_args(self, tokenlist):
+        """ Collects comma separated arguments from a list of tokens.
+The arguments must be enclosed in parenthesis.
+Returns a tuple (tokencount, args, positions) where
+- tokencount is the number of tokens consumed,
+- args is a list of arguments, and
+- positions is a list of integers containing the starting index of each
+  argument.
+Each argument is represented by a list of tokens.
 
-    # ----------------------------------------------------------------------
-    # collect_args()
-    #
-    # Collects comma separated arguments from a list of tokens.   The arguments
-    # must be enclosed in parenthesis.  Returns a tuple (tokencount,args,positions)
-    # where tokencount is the number of tokens consumed, args is a list of arguments,
-    # and positions is a list of integers containing the starting index of each
-    # argument.  Each argument is represented by a list of tokens.
-    #
-    # When collecting arguments, leading and trailing whitespace is removed
-    # from each argument.
-    #
-    # This function properly handles nested parenthesis and commas---these do not
-    # define new arguments.
-    # ----------------------------------------------------------------------
+When collecting arguments, leading and trailing whitespace is removed from
+each argument.
 
-    def collect_args(self,tokenlist):
+This function properly handles nested parenthesis and commas --- these do not
+define new arguments.
+        """
+
+        # cache
+        WS = self.t_WS
+
         args = []
         positions = []
         current_arg = []
@@ -406,14 +408,18 @@ text into a line-by-line format.
 
         # Search for the opening '('.
         i = 0
-        while (i < tokenlen) and (tokenlist[i].type in self.t_WS):
+        while (i < tokenlen) and (tokenlist[i].type in WS):
             i += 1
 
         if (i < tokenlen) and (tokenlist[i].value == '('):
-            positions.append(i+1)
+            positions.append(i + 1)
         else:
-            self.error(self.source,tokenlist[0].lineno,"Missing '(' in macro arguments")
-            return 0, [], []
+            self.error(
+                self.source,
+                tokenlist[0].lineno,
+                "Missing '(' in macro arguments"
+            )
+            return (0, [], [])
 
         i += 1
 
@@ -428,19 +434,23 @@ text into a line-by-line format.
                     if current_arg:
                         args.append(self.tokenstrip(current_arg))
                         positions.append(i)
-                    return i+1,args,positions
+                    return (i + 1, args, positions)
                 current_arg.append(t)
             elif t.value == ',' and nesting == 1:
                 args.append(self.tokenstrip(current_arg))
-                positions.append(i+1)
+                positions.append(i + 1)
                 current_arg = []
             else:
                 current_arg.append(t)
             i += 1
 
         # Missing end argument
-        self.error(self.source,tokenlist[-1].lineno,"Missing ')' in macro arguments")
-        return 0, [],[]
+        self.error(
+            self.source,
+            tokenlist[-1].lineno,
+            "Missing ')' in macro arguments"
+        )
+        return (0, [],[])
 
     def macro_prescan(self, macro):
         """ Examine the macro value (token sequence) and identify patch points.
