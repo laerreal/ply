@@ -309,38 +309,54 @@ lexer regardless of how tokens have been named.
         """
         self.path.append(path)
 
-    # ----------------------------------------------------------------------
-    # group_lines()
-    #
-    # Given an input string, this function splits it into lines.  Trailing whitespace
-    # is removed.   Any line ending with \ is grouped with the next line.  This
-    # function forms the lowest level of the preprocessor---grouping into text into
-    # a line-by-line format.
-    # ----------------------------------------------------------------------
+    def concat_lines(self, string):
+        cur = ""
+        cnt = 0
 
-    def group_lines(self,input):
+        for l in string.splitlines():
+            l = l.rstrip()
+            if l.endswith('\\'):
+                cur += l[:-1]
+                cnt += 1
+            elif cnt:
+                yield cur + l
+                for __ in range(cnt):
+                    yield ""
+                cur = ""
+                cnt = 0
+            else:
+                yield l
+
+        if cnt:
+            yield cur
+            for __ in range(cnt):
+                yield ""
+
+    def group_lines(self, text):
+        """ Given an input text, this function splits it into lines.
+Trailing whitespace is removed.
+Any line ending with \ is concatenated with the next line.
+This function forms the lowest level of the preprocessor --- grouping input
+text into a line-by-line format.
+        """
+        text = "\n".join(self.concat_lines(text))
+
         lex = self.lexer.clone()
-        lines = [x.rstrip() for x in input.splitlines()]
-        for i in xrange(len(lines)):
-            j = i+1
-            while lines[i].endswith('\\') and (j < len(lines)):
-                lines[i] = lines[i][:-1]+lines[j]
-                lines[j] = ""
-                j += 1
-
-        input = "\n".join(lines)
-        lex.input(input)
+        lex.input(text)
         lex.lineno = 1
 
+        # cache
+        WS = self.t_WS
+        token = lex.token
+
         current_line = []
-        while True:
-            tok = lex.token()
-            if not tok:
-                break
+        tok = token()
+        while tok:
             current_line.append(tok)
-            if tok.type in self.t_WS and '\n' in tok.value:
+            if tok.type in WS and '\n' in tok.value:
                 yield current_line
                 current_line = []
+            tok = token()
 
         if current_line:
             yield current_line
