@@ -759,21 +759,18 @@ Given a string of text, tokenize into a list of tokens.
             result = 0
         return result
 
-    # ----------------------------------------------------------------------
-    # parsegen()
-    #
-    # Parse an input string/
-    # ----------------------------------------------------------------------
-    def parsegen(self,input,source=None):
+    def parsegen(self, text, source = None):
+        """ Parse an input string.
+        """
 
         # Replace trigraph sequences
-        t = trigraph(input)
+        t = trigraph(text)
         lines = self.group_lines(t)
 
         if not source:
             source = ""
 
-        self.define("__FILE__ \"%s\"" % source)
+        self.define('__FILE__ "%s"' % source)
 
         self.source = source
         chunk = []
@@ -781,18 +778,20 @@ Given a string of text, tokenize into a list of tokens.
         iftrigger = False
         ifstack = []
 
-        for x in lines:
-            for i,tok in enumerate(x):
-                if tok.type not in self.t_WS: break
+        for l in lines:
+            for i, tok in enumerate(l):
+                if tok.type not in self.t_WS:
+                    break
+
             if tok.value == '#':
                 # Preprocessor directive
 
                 # insert necessary whitespace instead of eaten tokens
-                for tok in x:
+                for tok in l:
                     if tok.type in self.t_WS and '\n' in tok.value:
                         chunk.append(tok)
 
-                dirtokens = self.tokenstrip(x[i+1:])
+                dirtokens = self.tokenstrip(l[i + 1:])
                 if dirtokens:
                     name = dirtokens[0].value
                     args = self.tokenstrip(dirtokens[1:])
@@ -804,61 +803,74 @@ Given a string of text, tokenize into a list of tokens.
                     if enable:
                         for tok in self.expand_macros(chunk):
                             yield tok
-                        chunk = []
+                        chunk *= 0
                         self.define(args)
+
                 elif name == 'include':
                     if enable:
                         for tok in self.expand_macros(chunk):
                             yield tok
-                        chunk = []
+                        chunk *= 0
                         oldfile = self.macros['__FILE__']
                         for tok in self.include(args):
                             yield tok
                         self.macros['__FILE__'] = oldfile
                         self.source = source
+
                 elif name == 'undef':
                     if enable:
                         for tok in self.expand_macros(chunk):
                             yield tok
-                        chunk = []
+                        chunk *= 0
                         self.undef(args)
+
                 elif name == 'ifdef':
-                    ifstack.append((enable,iftrigger))
-                    if enable:
-                        if not args[0].value in self.macros:
-                            enable = False
-                            iftrigger = False
-                        else:
-                            iftrigger = True
-                elif name == 'ifndef':
-                    ifstack.append((enable,iftrigger))
+                    ifstack.append((enable, iftrigger))
                     if enable:
                         if args[0].value in self.macros:
+                            iftrigger = True
+                        else:
                             enable = False
                             iftrigger = False
-                        else:
-                            iftrigger = True
-                elif name == 'if':
-                    ifstack.append((enable,iftrigger))
+
+                elif name == 'ifndef':
+                    ifstack.append((enable, iftrigger))
                     if enable:
-                        result = self.evalexpr(args)
-                        if not result:
+                        if args[0].value not in self.macros:
+                            iftrigger = True
+                        else:
                             enable = False
                             iftrigger = False
-                        else:
+
+                elif name == 'if':
+                    ifstack.append((enable, iftrigger))
+                    if enable:
+                        if self.evalexpr(args):
                             iftrigger = True
+                        else:
+                            enable = False
+                            iftrigger = False
+
                 elif name == 'elif':
                     if ifstack:
-                        if ifstack[-1][0]:     # We only pay attention if outer "if" allows this
-                            if enable:         # If already true, we flip enable False
+                        # We only pay attention if outer "if" allows this.
+                        # If already true, we flip enable False.
+                        if ifstack[-1][0]:
+                            if enable:
                                 enable = False
-                            elif not iftrigger:   # If False, but not triggered yet, we'll check expression
-                                result = self.evalexpr(args)
-                                if result:
-                                    enable  = True
+                            elif not iftrigger:
+                                # If False, but not triggered yet,
+                                # we'll check expression.
+                                if self.evalexpr(args):
+                                    enable = True
                                     iftrigger = True
+
                     else:
-                        self.error(self.source,dirtokens[0].lineno,"Misplaced #elif")
+                        self.error(
+                            self.source,
+                            dirtokens[0].lineno,
+                            "Misplaced #elif"
+                        )
 
                 elif name == 'else':
                     if ifstack:
@@ -866,16 +878,23 @@ Given a string of text, tokenize into a list of tokens.
                             if enable:
                                 enable = False
                             elif not iftrigger:
-                                enable = True
-                                iftrigger = True
+                                enable = iftrigger = True
                     else:
-                        self.error(self.source,dirtokens[0].lineno,"Misplaced #else")
+                        self.error(
+                            self.source,
+                            dirtokens[0].lineno,
+                            "Misplaced #else"
+                        )
 
                 elif name == 'endif':
                     if ifstack:
-                        enable,iftrigger = ifstack.pop()
+                        enable, iftrigger = ifstack.pop()
                     else:
-                        self.error(self.source,dirtokens[0].lineno,"Misplaced #endif")
+                        self.error(
+                            self.source,
+                            dirtokens[0].lineno,
+                            "Misplaced #endif"
+                        )
                 else:
                     # Unknown preprocessor directive
                     pass
@@ -883,11 +902,10 @@ Given a string of text, tokenize into a list of tokens.
             else:
                 # Normal text
                 if enable:
-                    chunk.extend(x)
+                    chunk.extend(l)
 
         for tok in self.expand_macros(chunk):
             yield tok
-        chunk = []
 
     def include(self, tokens):
         """ Implementation of file-inclusion.
