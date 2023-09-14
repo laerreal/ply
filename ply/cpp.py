@@ -548,19 +548,15 @@ Given a string of text, tokenize into a list of tokens.
 
         return rep
 
-
-    # ----------------------------------------------------------------------
-    # expand_macros()
-    #
-    # Given a list of tokens, this function performs macro expansion.
-    # The expanded argument is a dictionary that contains macros already
-    # expanded.
-    # This is used to prevent infinite recursion.
-    # ----------------------------------------------------------------------
-
     def expand_macros(self, tokens, expanded = None):
+        """ Given a list of tokens, this function performs macro expansion.
+The expanded argument is a dictionary that contains macros already expanded.
+This is used to prevent infinite recursion.
+        """
+
         # cache
         macros = self.macros
+        t_WS = self.t_WS
 
         if expanded is None:
             expanded = set()
@@ -582,7 +578,7 @@ Given a string of text, tokenize into a list of tokens.
                 if arglist:
                     # A macro with arguments
                     j = i + 1
-                    while j < len(tokens) and tokens[j].type in self.t_WS:
+                    while j < len(tokens) and tokens[j].type in t_WS:
                         j += 1
 
                     if j < len(tokens) and tokens[j].value == '(':
