@@ -237,14 +237,10 @@ Given a string of text, tokenize into a list of tokens.
 
         return tokens
 
-    # ---------------------------------------------------------------------
-    # error()
-    #
-    # Report a preprocessor error/warning of some kind
-    # ----------------------------------------------------------------------
-
-    def error(self,file,line,msg):
-        print("%s:%d %s" % (file,line,msg))
+    def error(self, file, line, msg):
+        """ Report a preprocessor error/warning of some kind.
+        """
+        print("%s:%d %s" % (file, line, msg))
 
     # ----------------------------------------------------------------------
     # lexprobe()
