@@ -756,12 +756,14 @@ its macros and defined(...) expressions expanded by evalexpr.
                     value = value[:-1]
                 tokens[i].value = value
 
-        return self.evalexpr_string("".join([str(x.value) for x in tokens]))
+        return self.evalexpr_string(tokens)
 
-    def evalexpr_string(self, expr):
+    def evalexpr_string(self, tokens):
         """ Helper for evalexpr that evaluates a string expression.
 This implementation does basic C->python conversion and then uses eval().
         """
+        expr = "".join([str(x.value) for x in tokens])
+
         expr = expr.replace("&&", " and ")
         expr = expr.replace("||", " or ")
         expr = expr.replace("!", " not ")
