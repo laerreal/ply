@@ -39,9 +39,6 @@ from __future__ import (
     generators,
 )
 
-from copy import (
-    copy,
-)
 from os.path import (
     dirname,
     join,
@@ -198,8 +195,18 @@ during macro expansion.
         return self.vararg is not None
 
 
+def copy_token(t):
+    ret = type(t)()
+    ret.type = t.type
+    ret.value = t.value
+    ret.lineno = t.lineno
+    ret.lexpos = t.lexpos
+    # lexer - is not needed
+    return ret
+
+
 at_index_2 = lambda x: x[2]
-copy_tokens = lambda tokens : list(map(copy, tokens))
+copy_tokens = lambda tokens : list(map(copy_token, tokens))
 
 class Preprocessor(object):
     """ Preprocessor object.
@@ -484,7 +491,7 @@ where to apply patches to the value to form the expansion.
                 argnum = arglist.index(t.value)
                 # Conversion of argument to a string
                 if i > 0 and value[i - 1].value == '#':
-                    value[i] = copy(t)
+                    value[i] = copy_token(t)
                     value[i].type = self.t_STRING
                     del value[i - 1]
                     str_patch.append((argnum, i - 1))
@@ -745,11 +752,11 @@ its macros and defined(...) expressions expanded by evalexpr.
 
         for i, t in enumerate(tokens):
             if t.type == ID:
-                tokens[i] = copy(t)
+                tokens[i] = copy_token(t)
                 tokens[i].type = INTEGER
                 tokens[i].value = self.t_INTEGER_TYPE("0")
             elif t.type == INTEGER:
-                tokens[i] = copy(t)
+                tokens[i] = copy_token(t)
                 # Strip off any trailing suffixes
                 value = str(tokens[i].value)
                 while value[-1] not in "0123456789abcdefABCDEF":
