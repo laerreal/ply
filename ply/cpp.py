@@ -529,7 +529,7 @@ The return value is a token sequence representing the replacement macro tokens.
         for argnum, i in macro.str_patch:
             if argnum not in str_expansion:
                 str_expansion[argnum] = (
-                    '"%s"' % "".join([x.value for x in args[argnum]])
+                    '"%s"' % "".join(x.value for x in args[argnum])
                 ).replace("\\", "\\\\")
             rep[i].value = str_expansion[argnum]
 
