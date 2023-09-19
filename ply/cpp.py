@@ -588,11 +588,14 @@ This is used to prevent infinite recursion.
                 i += 1
                 continue
 
-            if t.value in macros and t.value not in expanded:
-                # Yes, we found a macro match
-                expanded.add(t.value)
+            # cache
+            t_value = t.value
 
-                m = macros[t.value]
+            if t_value in macros and t_value not in expanded:
+                # Yes, we found a macro match
+                expanded.add(t_value)
+
+                m = macros[t_value]
                 arglist = m.arglist
 
                 if arglist:
@@ -613,7 +616,7 @@ This is used to prevent infinite recursion.
                                 self.source,
                                 t.lineno,
                                 "Macro %s requires %d arguments" % (
-                                    t.value,
+                                    t_value,
                                     len(arglist),
                                 )
                             )
@@ -626,7 +629,7 @@ This is used to prevent infinite recursion.
                                     t.lineno,
                                     "Macro %s must have"
                                     " at least %d arguments" % (
-                                        t.value,
+                                        t_value,
                                         len(arglist) - 1),
                                     )
                             else:
@@ -634,7 +637,7 @@ This is used to prevent infinite recursion.
                                     self.source,
                                     t.lineno,
                                     "Macro %s must have"
-                                    " at least 1 argument" % (t.value,)
+                                    " at least 1 argument" % (t_value,)
                                 )
                             i = j + tokcount
                         else:
@@ -674,10 +677,10 @@ This is used to prevent infinite recursion.
                     tokens[i:i + 1] = ex
                     i += len(ex)
 
-                expanded.remove(t.value)
+                expanded.remove(t_value)
                 continue
 
-            elif t.value == '__LINE__':
+            elif t_value == '__LINE__':
                 t.type = self.t_INTEGER
                 t.value = self.t_INTEGER_TYPE(t.lineno)
 
