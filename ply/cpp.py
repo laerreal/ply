@@ -745,13 +745,12 @@ its macros and defined(...) expressions expanded by evalexpr.
         # cache
         ID = self.t_ID
         INTEGER = self.t_INTEGER
-        INTEGER_TYPE = self.t_INTEGER_TYPE
 
         for i, t in enumerate(tokens):
             if t.type == ID:
                 tokens[i] = t = copy(t)
                 t.type = INTEGER
-                t.value = INTEGER_TYPE("0")
+                t.value = "0"
             elif t.type == INTEGER:
                 tokens[i] = t = copy(t)
                 # Strip off any trailing suffixes
@@ -766,7 +765,7 @@ its macros and defined(...) expressions expanded by evalexpr.
         """ Helper for evalexpr that evaluates a string expression.
 This implementation does basic C->python conversion and then uses eval().
         """
-        expr = "".join(str(x.value) for x in tokens)
+        expr = "".join(x.value for x in tokens)
 
         expr = expr.replace("&&", " and ")
         expr = expr.replace("||", " or ")
