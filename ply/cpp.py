@@ -766,7 +766,7 @@ its macros and defined(...) expressions expanded by evalexpr.
         """ Helper for evalexpr that evaluates a string expression.
 This implementation does basic C->python conversion and then uses eval().
         """
-        expr = "".join([str(x.value) for x in tokens])
+        expr = "".join(str(x.value) for x in tokens)
 
         expr = expr.replace("&&", " and ")
         expr = expr.replace("||", " or ")
