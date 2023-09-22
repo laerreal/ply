@@ -1085,10 +1085,8 @@ include files.
         """ Undefine a macro.
         """
         name = tokens[0].value
-        try:
-            del self.macros[name]
-        except LookupError:
-            pass
+        self.macros.pop(name, None)
+
 
     def parse(self, text, source = None, ignore = None):
         """ Parse input text.
