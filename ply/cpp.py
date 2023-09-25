@@ -1016,11 +1016,9 @@ include files.
                 mtype = None
             if not mtype:
                 m = Macro(name.value, [])
-                self.macros[name.value] = m
             elif mtype.type in self.t_WS:
                 # A normal macro
                 m = Macro(name.value, self.tokenstrip(linetok[2:]))
-                self.macros[name.value] = m
             elif mtype.value == '(':
                 # A macro with arguments
                 tokcount, args, __ = self.collect_args(linetok[1:])
@@ -1030,7 +1028,7 @@ include files.
                         print("No more arguments"
                               " may follow a variadic argument"
                         )
-                        break
+                        return
                     astr = "".join([str(_i.value) for _i in a])
                     if astr == "...":
                         variadic = True
@@ -1050,36 +1048,38 @@ include files.
                         continue
                     if len(a) > 1 or a[0].type != self.t_ID:
                         print("Invalid macro argument")
-                        break
-                else:
-                    mvalue = self.tokenstrip(linetok[1 + tokcount:])
-                    i = 0
-                    while i < (len(mvalue) - 1):
-                        if (
-                            mvalue[i].type in self.t_WS
-                            and mvalue[i + 1].value == '##'
-                        ):
-                            del mvalue[i]
-                            continue
-                        elif (
-                            mvalue[i].value == '##'
-                            and mvalue[i + 1].type in self.t_WS
-                        ):
-                            del mvalue[i + 1]
-                        i += 1
+                        return
 
-                    m = Macro(
-                        name.value,
-                        mvalue,
-                        [x[0].value for x in args],
-                        variadic
-                    )
-                    self.macro_prescan(m)
-                    self.macros[name.value] = m
+                mvalue = self.tokenstrip(linetok[1 + tokcount:])
+                i = 0
+                while i < (len(mvalue) - 1):
+                    if (
+                        mvalue[i].type in self.t_WS
+                        and mvalue[i + 1].value == '##'
+                    ):
+                        del mvalue[i]
+                        continue
+                    elif (
+                        mvalue[i].value == '##'
+                        and mvalue[i + 1].type in self.t_WS
+                    ):
+                        del mvalue[i + 1]
+                    i += 1
+
+                m = Macro(
+                    name.value,
+                    mvalue,
+                    [x[0].value for x in args],
+                    variadic
+                )
+                self.macro_prescan(m)
             else:
                 print("Bad macro definition")
+                return
         except LookupError:
             print("Bad macro definition")
+        else:
+            self.macros[name.value] = m
 
     def undef(self, tokens):
         """ Undefine a macro.
