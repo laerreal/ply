@@ -65,9 +65,27 @@ from warnings import (
 # Some Python 3 compatibility shims
 if version_info.major < 3:
     STRING_TYPES = (str, unicode)
+
+    def read_include_file(filepath):
+        with open(filepath) as file:
+            return file.read()
 else:
     STRING_TYPES = str
     xrange = range
+
+    def read_include_file(filepath):
+        with open(filepath, 'r',
+            encoding = 'utf-8',
+            errors = 'surrogateescape'
+        ) as file:
+            return file.read()
+
+read_include_file.__doc__ = """\
+Reads a source file for inclusion using #include
+Could be overridden to e.g. customize encoding, limit access to
+certain paths on the filesystem, or provide the contents of system
+include files.
+"""
 
 # -----------------------------------------------------------------------------
 # Default preprocessor lexer definitions.   These tokens are enough to get
@@ -980,26 +998,7 @@ This implementation does basic C->python conversion and then uses eval().
         else:
             print("Couldn't find '%s'" % filename)
 
-
-    if version_info.major < 3:
-        def read_include_file(self, filepath):
-            with open(filepath) as file:
-                return file.read()
-    else:
-        def read_include_file(self, filepath):
-            with open(filepath, 'r',
-                encoding = 'utf-8',
-                errors = 'surrogateescape'
-            ) as file:
-                return file.read()
-
-    read_include_file.__doc__ = """\
-Reads a source file for inclusion using #include
-Could be overridden to e.g. customize encoding, limit access to
-certain paths on the filesystem, or provide the contents of system
-include files.
-    """
-
+    read_include_file = staticmethod(read_include_file)
 
     def define(self, tokens):
         """ Define a new macro.
