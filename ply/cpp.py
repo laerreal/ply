@@ -43,6 +43,7 @@ from copy import (
     copy,
 )
 from os.path import (
+    basename,
     dirname,
     join,
 )
@@ -241,6 +242,13 @@ Contains macro definitions, include directories, and other information.
         self.define('__DATE__ "%s"' % strftime("%b %d %Y",tm))
         self.define('__TIME__ "%s"' % strftime("%H:%M:%S",tm))
         self.parser = None
+
+    @property
+    def full_source_path(self):
+        if self.temp_path:
+            return join(self.temp_path[0], basename(self.source))
+        else:
+            return self.source
 
     def tokenize(self, text):
         """ Utility function.
