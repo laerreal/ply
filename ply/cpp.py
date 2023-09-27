@@ -448,7 +448,7 @@ define new arguments.
             positions.append(i + 1)
         else:
             self.error(
-                self.source,
+                self.full_source_path,
                 tokenlist[0].lineno,
                 "Missing '(' in macro arguments"
             )
@@ -479,7 +479,7 @@ define new arguments.
 
         # Missing end argument
         self.error(
-            self.source,
+            self.full_source_path,
             tokenlist[-1].lineno,
             "Missing ')' in macro arguments"
         )
@@ -639,7 +639,7 @@ This is used to prevent infinite recursion.
 
                         if not variadic and len(args) != len(arglist):
                             self.error(
-                                self.source,
+                                self.full_source_path,
                                 t.lineno,
                                 "Macro %s requires %d arguments" % (
                                     t_value,
@@ -651,7 +651,7 @@ This is used to prevent infinite recursion.
                         elif variadic and len(args) < len(arglist) - 1:
                             if len(arglist) > 2:
                                 self.error(
-                                    self.source,
+                                    self.full_source_path,
                                     t.lineno,
                                     "Macro %s must have"
                                     " at least %d arguments" % (
@@ -660,7 +660,7 @@ This is used to prevent infinite recursion.
                                     )
                             else:
                                 self.error(
-                                    self.source,
+                                    self.full_source_path,
                                     t.lineno,
                                     "Macro %s must have"
                                     " at least 1 argument" % (t_value,)
@@ -750,7 +750,7 @@ evaluating integral expressions.
                         break
                     else:
                         self.error(
-                            self.source,
+                            self.full_source_path,
                             ti.lineno,
                             "Malformed defined()"
                         )
@@ -803,7 +803,7 @@ This implementation does basic C->python conversion and then uses eval().
                 result = eval(expr)
         except Exception:
             self.error(
-                self.source,
+                self.full_source_path,
                 tokens[0].lineno,
                 "Couldn't evaluate expression"
             )
@@ -918,7 +918,7 @@ This implementation does basic C->python conversion and then uses eval().
 
                     else:
                         self.error(
-                            self.source,
+                            self.full_source_path,
                             dirtokens[0].lineno,
                             "Misplaced #elif"
                         )
@@ -932,7 +932,7 @@ This implementation does basic C->python conversion and then uses eval().
                                 enable = iftrigger = True
                     else:
                         self.error(
-                            self.source,
+                            self.full_source_path,
                             dirtokens[0].lineno,
                             "Misplaced #else"
                         )
@@ -942,7 +942,7 @@ This implementation does basic C->python conversion and then uses eval().
                         enable, iftrigger = ifstack.pop()
                     else:
                         self.error(
-                            self.source,
+                            self.full_source_path,
                             dirtokens[0].lineno,
                             "Misplaced #endif"
                         )
