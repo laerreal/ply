@@ -1318,6 +1318,11 @@ This implementation does basic C->python conversion and then uses eval().
         """
         # Try to extract the filename and then process an include file
 
+        # GCC ignores inclusion stack.
+        # It looks for files in `path` only.
+        # Includer's directory is looked only for "quote" inclusions.
+        # https://gcc.gnu.org/onlinedocs/cpp/Search-Path.html
+
         if tokens:
             # cache
             temp_path = self.temp_path
@@ -1334,10 +1339,12 @@ This implementation does basic C->python conversion and then uses eval().
                 else:
                     print("Malformed #include <...>")
                 filename = "".join(x.value for x in tokens[1:i])
-                path = self.path + [""] + temp_path
+
+                path = self.path
             elif t0.type == self.t_STRING:
                 filename = t0.value[1:-1]
-                path = temp_path + [""] + self.path
+
+                path = temp_path[:1] + self.path
             else:
                 print("Malformed #include statement")
                 return
