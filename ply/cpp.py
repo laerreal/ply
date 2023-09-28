@@ -1287,9 +1287,23 @@ This implementation does basic C->python conversion and then uses eval().
                             dirtokens[0].lineno,
                             "Misplaced #endif"
                         )
-                else:
-                    # Unknown preprocessor directive
+                elif name == 'error':
+                    # original ply.cpp silently ignores errors
                     pass
+                elif name == 'warning':
+                    # ... and warnings
+                    pass
+                elif name == 'pragma':
+                    # no pragmas implemented
+                    pass
+                else:
+                    self.error(
+                        self.full_source_path,
+                        dirtokens[0].lineno,
+                        "Unknown directive #" + "".join(
+                            t.value for t in dirtokens
+                        )
+                    )
 
             else:
                 # Normal text
