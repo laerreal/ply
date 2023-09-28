@@ -62,6 +62,8 @@ from warnings import (
     simplefilter,
 )
 
+import ply.lex as lex
+import ply.yacc as yacc
 
 # Some Python 3 compatibility shims
 if version_info.major < 3:
@@ -87,6 +89,13 @@ Could be overridden to e.g. customize encoding, limit access to
 certain paths on the filesystem, or provide the contents of system
 include files.
 """
+
+
+def iter_grammar_tokens(ns):
+    for t in dir(ns):
+        if t.startswith("t_"):
+            if t != "t_error" and t != "t_ignore":
+                yield t[2:]
 
 # -----------------------------------------------------------------------------
 # Default preprocessor lexer definitions.   These tokens are enough to get
@@ -154,6 +163,316 @@ def t_error(t):
     t.value = t.value[0]
     t.lexer.skip(1)
     return t
+
+
+class IFExpr:
+    # based on ply/example/ansic/clex.py
+
+    t_PLUS = r'\+'
+    t_MINUS = r'-'
+    t_TIMES = r'\*'
+    t_DIVIDE = r'/'
+    t_MOD = r'%'
+    t_OR = r'\|'
+    t_AND = r'&'
+    t_NOT = r'~'
+    t_XOR = r'\^'
+    t_LSHIFT = r'<<'
+    t_RSHIFT = r'>>'
+    t_LOR = r'\|\|'
+    t_LAND = r'&&'
+    t_LNOT = r'!'
+    t_LT = r'<'
+    t_GT = r'>'
+    t_LE = r'<='
+    t_GE = r'>='
+    t_EQ = r'=='
+    t_NE = r'!='
+
+    t_LPAREN = r'\('
+    t_RPAREN = r'\)'
+
+    t_CONDOP = r'\?'
+    t_COLON = r':'
+
+    # Integer literal
+    @staticmethod
+    def t_DCONST(t):
+        r'[1-9]\d*([uU]|[lL]|[uU][lL]|[lL][uU])?'
+        t.value = int(t.value.rstrip("uUlL"), base = 10)
+        return t
+
+    # above t_OCONST, top priority
+    @staticmethod
+    def t_HCONST(t):
+        r'0[xX][0-9a-fA-F]+([uU]|[lL]|[uU][lL]|[lL][uU])?'
+        t.value = int(t.value.rstrip("uUlL")[2:], base = 16)
+        return t
+
+    @staticmethod
+    def t_OCONST(t):
+        r'0\d*([uU]|[lL]|[uU][lL]|[lL][uU])?'
+        t.value = int(t.value.rstrip("uUlL"), base = 8)
+        return t
+
+    # Floating literal
+    @staticmethod
+    def t_FCONST(t):
+        r'((\d+)(\.\d+)(e(\+|-)?(\d+))? | (\d+)e(\+|-)?(\d+))([lL]|[fF])?'
+        t.value = float(t.value.rstrip("lLfF"))
+        return t
+
+    # Character constant 'c' or L'c'
+    @staticmethod
+    def t_CCONST(t):
+        r'(L)?\'([^\\\n]|(\\.))*?\''
+        print("character parsing is not implemented")
+        t.value = 1
+        return t
+
+    # Conflicts with global t_error
+    # @staticmethod
+    # def t_error(t):
+    #     raise Exception(
+    #         "Illegal character in #(el)if statement " + repr(t.value[0])
+    #     )
+
+    t_ignore = "[ \t]"
+
+    # based on ply/example/ansic/cparse.py
+
+    @staticmethod
+    def p_constant(p):
+        '''constant \
+            : DCONST
+            | OCONST
+            | HCONST
+            | FCONST
+            | CCONST'''
+        p[0] = p[1]
+
+    @staticmethod
+    def p_primary_expression_1(p):
+        "primary_expression : constant"
+        p[0] = p[1]
+
+    @staticmethod
+    def p_primary_expression_2(p):
+        "primary_expression : LPAREN expression RPAREN"
+        p[0] = p[2]
+
+    @staticmethod
+    def p_unary_expression_1(p):
+        'unary_expression : primary_expression'
+        p[0] = p[1]
+
+    @staticmethod
+    def p_unary_expression_4_1(p):
+        'unary_expression : PLUS unary_expression'
+        p[0] = p[2]
+
+    @staticmethod
+    def p_unary_expression_4_2(p):
+        'unary_expression : MINUS unary_expression'
+        p[0] = -p[2]
+
+    @staticmethod
+    def p_unary_expression_4_3(p):
+        'unary_expression : NOT unary_expression'
+        p[0] = ~p[2]
+
+    @staticmethod
+    def p_unary_expression_4_4(p):
+        'unary_expression : LNOT unary_expression'
+        p[0] = not p[2]
+
+    @staticmethod
+    def p_multiplicative_expression_1(p):
+        'multiplicative_expression : unary_expression'
+        p[0] = p[1]
+
+    @staticmethod
+    def p_multiplicative_expression_2(p):
+        'multiplicative_expression : \
+            multiplicative_expression TIMES unary_expression'
+        p[0] = p[1] * p[3]
+
+    @staticmethod
+    def p_multiplicative_expression_3(p):
+        'multiplicative_expression : \
+            multiplicative_expression DIVIDE unary_expression'
+        p[0] = p[1] / p[3]
+
+    @staticmethod
+    def p_multiplicative_expression_4(p):
+        'multiplicative_expression : \
+            multiplicative_expression MOD unary_expression'
+        p[0] = p[1] % p[3]
+
+    @staticmethod
+    def p_additive_expression_1(p):
+        'additive_expression : multiplicative_expression'
+        p[0] = p[1]
+
+    @staticmethod
+    def p_additive_expression_2(p):
+        'additive_expression : \
+            additive_expression PLUS multiplicative_expression'
+        p[0] = p[1] + p[3]
+
+    @staticmethod
+    def p_additive_expression_3(p):
+        'additive_expression : \
+            additive_expression MINUS multiplicative_expression'
+        p[0] = p[1] - p[3]
+
+    @staticmethod
+    def p_shift_expression_1(p):
+        'shift_expression : additive_expression'
+        p[0] = p[1]
+
+    @staticmethod
+    def p_shift_expression_2(p):
+        'shift_expression : shift_expression LSHIFT additive_expression'
+        p[0] = int(p[1]) << int(p[3])
+
+    @staticmethod
+    def p_shift_expression_3(p):
+        'shift_expression : shift_expression RSHIFT additive_expression'
+        p[0] = int(p[1]) >> int(p[3])
+
+    @staticmethod
+    def p_relational_expression_1(p):
+        'relational_expression : shift_expression'
+        p[0] = p[1]
+
+    @staticmethod
+    def p_relational_expression_2(p):
+        'relational_expression : relational_expression LT shift_expression'
+        p[0] = p[1] < p[3]
+
+    @staticmethod
+    def p_relational_expression_3(p):
+        'relational_expression : relational_expression GT shift_expression'
+        p[0] = p[1] > p[3]
+
+    @staticmethod
+    def p_relational_expression_4(p):
+        'relational_expression : relational_expression LE shift_expression'
+        p[0] = p[1] <= p[3]
+
+    @staticmethod
+    def p_relational_expression_5(p):
+        'relational_expression : relational_expression GE shift_expression'
+        p[0] = p[1] >= p[3]
+
+    @staticmethod
+    def p_equality_expression_1(p):
+        'equality_expression : relational_expression'
+        p[0] = p[1]
+
+    @staticmethod
+    def p_equality_expression_2(p):
+        'equality_expression : equality_expression EQ relational_expression'
+        p[0] = p[1] == p[3]
+
+    @staticmethod
+    def p_equality_expression_3(p):
+        'equality_expression : equality_expression NE relational_expression'
+        p[0] = p[1] != p[3]
+
+    @staticmethod
+    def p_and_expression_1(p):
+        'and_expression : equality_expression'
+        p[0] = p[1]
+
+    @staticmethod
+    def p_and_expression_2(p):
+        'and_expression : and_expression AND equality_expression'
+        p[0] = int(p[1]) & int(p[3])
+
+    @staticmethod
+    def p_exclusive_or_expression_1(p):
+        'exclusive_or_expression : and_expression'
+        p[0] = p[1]
+
+    @staticmethod
+    def p_exclusive_or_expression_2(p):
+        'exclusive_or_expression : \
+            exclusive_or_expression XOR and_expression'
+        p[0] = int(p[1]) ^ int(p[3])
+
+    @staticmethod
+    def p_inclusive_or_expression_1(p):
+        'inclusive_or_expression : exclusive_or_expression'
+        p[0] = p[1]
+
+    @staticmethod
+    def p_inclusive_or_expression_2(p):
+        'inclusive_or_expression : \
+            inclusive_or_expression OR exclusive_or_expression'
+        p[0] = int(p[1]) | int(p[3])
+
+    @staticmethod
+    def p_logical_and_expression_1(p):
+        'logical_and_expression : inclusive_or_expression'
+        p[0] = p[1]
+
+    @staticmethod
+    def p_logical_and_expression_2(p):
+        'logical_and_expression : \
+            logical_and_expression LAND inclusive_or_expression'
+        p[0] = p[1] and p[3]
+
+    @staticmethod
+    def p_logical_or_expression_1(p):
+        'logical_or_expression : logical_and_expression'
+        p[0] = p[1]
+
+    @staticmethod
+    def p_logical_or_expression_2(p):
+        'logical_or_expression : \
+            logical_or_expression LOR logical_and_expression'
+        p[0] = p[1] or p[3]
+
+    @staticmethod
+    def p_assignment_expression_1(p):
+        'assignment_expression : conditional_expression'
+        p[0] = p[1]
+
+    @staticmethod
+    def p_expression_1(p):
+        'expression : assignment_expression'
+        p[0] = p[1]
+
+    @staticmethod
+    def p_conditional_expression_1(p):
+        'conditional_expression : logical_or_expression'
+        p[0] = p[1]
+
+    @staticmethod
+    def p_conditional_expression_2(p):
+        'conditional_expression : logical_or_expression \
+            CONDOP expression COLON conditional_expression'
+        p[0] = p[3] if p[1] else p[5]
+
+    @staticmethod
+    def p_constant_expression(p):
+        'constant_expression : conditional_expression'
+        p[0] = p[1]
+
+    @staticmethod
+    def p_error(p):
+        raise Exception("mapformed #(el)if statement")
+
+
+IFExpr.tokens = tuple(iter_grammar_tokens(IFExpr))
+if_lexer = lex.lex(module = IFExpr)
+if_parser = yacc.yacc(
+    module = IFExpr,
+    write_tables = False,
+    start = "constant_expression",
+)
 
 
 def trigraph(s):
@@ -807,19 +1126,19 @@ This implementation does basic C->python conversion and then uses eval().
         """
         expr = "".join(x.value for x in tokens)
 
-        expr = expr.replace("&&", " and ")
-        expr = expr.replace("||", " or ")
-        expr = expr.replace("!", " not ")
-        expr = expr.replace(" not =", " !=")
         try:
             with catch_warnings():
                 simplefilter("ignore")
-                result = eval(expr)
+                result = if_parser.parse(input = expr, lexer = if_lexer)
         except Exception:
+            try:
+                if_parser.parse(expr, lexer = if_lexer, debug = True)
+            except:
+                pass
             self.error(
                 self.full_source_path,
                 tokens[0].lineno,
-                "Couldn't evaluate expression"
+                "Couldn't evaluate expression: " + expr
             )
             result = 0
         return result
@@ -1139,7 +1458,6 @@ This implementation does basic C->python conversion and then uses eval().
 
 
 if __name__ == '__main__':
-    import ply.lex as lex
     lexer = lex.lex()
 
     # Run a preprocessor
