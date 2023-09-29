@@ -871,6 +871,8 @@ where to apply patches to the value to form the expansion.
                    and (value[i + 1].value == vararg)
                 ):
                     var_comma_patch.append(i - 1)
+                    del value[i]
+                    i -= 1
             i += 1
 
         patch.sort(key = at_index_2, reverse = True)
