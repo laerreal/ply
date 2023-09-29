@@ -928,10 +928,16 @@ The return value is a token sequence representing the replacement macro tokens.
 
         return rep
 
-    def expand_macros(self, tokens, expanded = None):
+    def expand_macros(self, tokens, expanded = None, lineno = None):
         """ Given a list of tokens, this function performs macro expansion.
 The expanded argument is a dictionary that contains macros already expanded.
 This is used to prevent infinite recursion.
+When expanding recurrently, lineno of first expanded token corresponds
+to the correct place of the file being processed.
+That lineno is used for __LINE__ macro expansion.
+lineno of a token processed during a recursive call does point to a line the
+macro has been #define-d where.
+That is not lineno you are looking for.
         """
 
         # cache
@@ -950,7 +956,8 @@ This is used to prevent infinite recursion.
 
             # cache
             t_value = t.value
-            t_lineno = t.lineno
+
+            actual_lineno = t.lineno if lineno is None else lineno
 
             if t_value in macros and t_value not in expanded:
                 # Yes, we found a macro match
@@ -975,7 +982,7 @@ This is used to prevent infinite recursion.
                         if not variadic and len(args) != len(arglist):
                             self.error(
                                 self.full_source_path,
-                                t_lineno,
+                                actual_lineno,
                                 "Macro %s requires %d arguments" % (
                                     t_value,
                                     len(arglist),
@@ -987,7 +994,7 @@ This is used to prevent infinite recursion.
                             if len(arglist) > 2:
                                 self.error(
                                     self.full_source_path,
-                                    t_lineno,
+                                    actual_lineno,
                                     "Macro %s must have"
                                     " at least %d arguments" % (
                                         t_value,
@@ -996,7 +1003,7 @@ This is used to prevent infinite recursion.
                             else:
                                 self.error(
                                     self.full_source_path,
-                                    t_lineno,
+                                    actual_lineno,
                                     "Macro %s must have"
                                     " at least 1 argument" % (t_value,)
                                 )
@@ -1015,11 +1022,16 @@ This is used to prevent infinite recursion.
                                     del args[len(arglist):]
 
                             # Get macro replacement text
-                            rep = self.macro_expand_args(m, args, expanded)
-                            rep = self.expand_macros(rep, expanded)
+                            rep = self.macro_expand_args(
+                                m, args, expanded, actual_lineno
+                            )
+
+                            rep = self.expand_macros(
+                                rep, expanded, actual_lineno
+                            )
 
                             for r in rep:
-                                r.lineno = t_lineno
+                                r.lineno = actual_lineno
 
                             tokens[i : j + tokcount] = rep
                             i += len(rep)
@@ -1030,10 +1042,12 @@ This is used to prevent infinite recursion.
                         i += 1
                 else:
                     # A simple macro
-                    ex = self.expand_macros(copy_tokens(m.value), expanded)
+                    ex = self.expand_macros(
+                        copy_tokens(m.value), expanded, actual_lineno
+                    )
 
                     for e in ex:
-                        e.lineno = t_lineno
+                        e.lineno = actual_lineno
 
                     tokens[i:i + 1] = ex
                     i += len(ex)
@@ -1043,7 +1057,7 @@ This is used to prevent infinite recursion.
 
             elif t_value == '__LINE__':
                 t.type = self.t_INTEGER
-                t.value = self.t_INTEGER_TYPE(t_lineno)
+                t.value = self.t_INTEGER_TYPE(actual_lineno)
 
             i += 1
 
