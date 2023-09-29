@@ -616,6 +616,7 @@ This is used to prevent infinite recursion.
 
             # cache
             t_value = t.value
+            t_lineno = t.lineno
 
             if t_value in macros and t_value not in expanded:
                 # Yes, we found a macro match
@@ -640,7 +641,7 @@ This is used to prevent infinite recursion.
                         if not variadic and len(args) != len(arglist):
                             self.error(
                                 self.full_source_path,
-                                t.lineno,
+                                t_lineno,
                                 "Macro %s requires %d arguments" % (
                                     t_value,
                                     len(arglist),
@@ -652,7 +653,7 @@ This is used to prevent infinite recursion.
                             if len(arglist) > 2:
                                 self.error(
                                     self.full_source_path,
-                                    t.lineno,
+                                    t_lineno,
                                     "Macro %s must have"
                                     " at least %d arguments" % (
                                         t_value,
@@ -661,7 +662,7 @@ This is used to prevent infinite recursion.
                             else:
                                 self.error(
                                     self.full_source_path,
-                                    t.lineno,
+                                    t_lineno,
                                     "Macro %s must have"
                                     " at least 1 argument" % (t_value,)
                                 )
@@ -684,7 +685,7 @@ This is used to prevent infinite recursion.
                             rep = self.expand_macros(rep, expanded)
 
                             for r in rep:
-                                r.lineno = t.lineno
+                                r.lineno = t_lineno
 
                             tokens[i : j + tokcount] = rep
                             i += len(rep)
@@ -698,7 +699,7 @@ This is used to prevent infinite recursion.
                     ex = self.expand_macros(copy_tokens(m.value), expanded)
 
                     for e in ex:
-                        e.lineno = t.lineno
+                        e.lineno = t_lineno
 
                     tokens[i:i + 1] = ex
                     i += len(ex)
@@ -708,7 +709,7 @@ This is used to prevent infinite recursion.
 
             elif t_value == '__LINE__':
                 t.type = self.t_INTEGER
-                t.value = self.t_INTEGER_TYPE(t.lineno)
+                t.value = self.t_INTEGER_TYPE(t_lineno)
 
             i += 1
 
