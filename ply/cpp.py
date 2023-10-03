@@ -1180,9 +1180,10 @@ This implementation does basic C->python conversion and then uses eval().
 
         lines = map(copy_tokens, inc.lines)
 
-        self.define('__FILE__ "%s"' % source)
-
         self.source = source
+        # Use full path like GCC CPP.
+        self.define('__FILE__ "%s"' % self.full_source_path)
+
         chunk = []
         enable = True
         iftrigger = False
