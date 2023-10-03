@@ -852,14 +852,17 @@ where to apply patches to the value to form the expansion.
                     continue
                 # Concatenation
                 elif (i > 0 and value[i - 1].value == '##'):
-                    patch.append(('c', argnum, i - 1))
+                    if ((i + 1) < len(value) and value[i + 1].value == '##'):
+                        # both side ## ID ## concatenation
+                        patch.append(('c', argnum, i - 1))
+                        del value[i + 1]
+                    else:
+                        patch.append(('l', argnum, i - 1))
                     del value[i - 1]
-                    # catch ##ID## by next `elif`
-                    i -= 1
                     # i += 1 is not required
                     continue
                 elif ((i + 1) < len(value) and value[i + 1].value == '##'):
-                    patch.append(('c', argnum, i))
+                    patch.append(('r', argnum, i))
                     del value[i + 1]
                 # Standard expansion
                 else:
@@ -915,8 +918,36 @@ The return value is a token sequence representing the replacement macro tokens.
         for ptype, argnum, i in macro.patch:
             # Concatenation.
             # Argument is left unexpanded
-            if ptype == 'c':
-                rep[i:i + 1] = args[argnum]
+            if ptype == 'l':
+                arg = args[argnum]
+                if 0 < i:
+                    arg = copy_tokens(arg)
+                    arg0 = arg[0]
+                    arg0.value = rep[i - 1].value + arg0.value
+                rep[i - 1:i + 1] = arg
+
+            elif ptype == 'r':
+                arg = args[argnum]
+                if i < len(rep) - 1:
+                    arg = copy_tokens(arg)
+                    argN = arg[-1]
+                    argN.value = argN.value + rep[i + 1].value
+                rep[i:i + 2] = arg
+
+            elif ptype == 'c':
+                arg = copy_tokens(args[argnum])
+                if 0 < i:
+                    arg = copy_tokens(arg)
+                    arg0 = arg[0]
+                    arg0.value = rep[i - 1].value + arg0.value
+                if i < len(rep) - 1:
+                    # not yet copied
+                    if i == 0:
+                        arg = copy_tokens(arg)
+                    argN = arg[-1]
+                    argN.value = argN.value + rep[i + 1].value
+                rep[i - 1:i + 2] = arg
+
             # Normal expansion.
             # Argument is macro expanded first
             elif ptype == 'e':
