@@ -981,6 +981,11 @@ That is not lineno you are looking for.
 
                         variadic = m.variadic
 
+                        if len(args) == 0:
+                            if len(arglist) == (2 if variadic else 1):
+                                # SINGLE_ARG_MACRO_CALL()
+                                args.append([])
+
                         if not variadic and len(args) != len(arglist):
                             self.error(
                                 self.full_source_path,
