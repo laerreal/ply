@@ -848,17 +848,19 @@ where to apply patches to the value to form the expansion.
                     value[i].type = self.t_STRING
                     del value[i - 1]
                     str_patch.append((argnum, i - 1))
+                    # i += 1 is not required
                     continue
                 # Concatenation
                 elif (i > 0 and value[i - 1].value == '##'):
                     patch.append(('c', argnum, i - 1))
                     del value[i - 1]
+                    # catch ##ID## by next `elif`
                     i -= 1
+                    # i += 1 is not required
                     continue
                 elif ((i + 1) < len(value) and value[i + 1].value == '##'):
                     patch.append(('c', argnum, i))
                     del value[i + 1]
-                    continue
                 # Standard expansion
                 else:
                     patch.append(('e', argnum, i))
