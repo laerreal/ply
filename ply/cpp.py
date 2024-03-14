@@ -217,6 +217,18 @@ during macro expansion.
         return self.vararg is not None
 
 
+class Includible(object):
+
+    __slots__ = (
+        "text",
+        "lines",
+    )
+
+    def __init__(self, text, lines):
+        self.text = text
+        self.lines = lines
+
+
 at_index_2 = lambda x: x[2]
 copy_tokens = lambda tokens : list(map(copy, tokens))
 
@@ -234,6 +246,7 @@ Contains macro definitions, include directories, and other information.
         self.macros = {}
         self.path = []
         self.temp_path = []
+        self.inc_cache = {}  # text -> Includible
 
         # Probe the lexer for selected tokens
         self.lexprobe()
@@ -815,12 +828,20 @@ This implementation does basic C->python conversion and then uses eval().
         """ Parse an input string.
         """
 
-        # Replace trigraph sequences
-        t = trigraph(text)
-        lines = self.group_lines(t)
-
         if not source:
             source = ""
+
+        inc = self.inc_cache.get(text)
+        if inc is None:
+            # Replace trigraph sequences
+            t = trigraph(text)
+
+            self.inc_cache[text] = inc = Includible(
+                text,
+                tuple(self.group_lines(t)),
+            )
+
+        lines = map(copy_tokens, inc.lines)
 
         self.define('__FILE__ "%s"' % source)
 
