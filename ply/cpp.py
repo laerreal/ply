@@ -565,6 +565,8 @@ Contains macro definitions, include directories, and other information.
         self.macros = {}
         self.path = []
         self.temp_path = []
+        # Paths to skip during next searching for a file to `#include(_next)`
+        self.next_path = 0
         self.inc_cache = {}  # text -> Includible
 
         # Probe the lexer for selected tokens
@@ -1204,8 +1206,24 @@ This implementation does basic C->python conversion and then uses eval().
                             yield tok
                         chunk *= 0
                         oldfile = self.macros['__FILE__']
+                        prev_next_path = self.next_path
+                        self.next_path = 0
                         for tok in self.include(args):
                             yield tok
+                        self.next_path = prev_next_path
+                        self.macros['__FILE__'] = oldfile
+                        self.source = source
+
+                elif name == 'include_next':
+                    if enable:
+                        for tok in self.expand_macros(chunk):
+                            yield tok
+                        chunk *= 0
+                        oldfile = self.macros['__FILE__']
+                        prev_next_path = self.next_path
+                        for tok in self.include(args):
+                            yield tok
+                        self.next_path = prev_next_path
                         self.macros['__FILE__'] = oldfile
                         self.source = source
 
@@ -1323,6 +1341,8 @@ This implementation does basic C->python conversion and then uses eval().
         # Includer's directory is looked only for "quote" inclusions.
         # https://gcc.gnu.org/onlinedocs/cpp/Search-Path.html
 
+        next_path = self.next_path
+
         if tokens:
             # cache
             temp_path = self.temp_path
@@ -1340,24 +1360,35 @@ This implementation does basic C->python conversion and then uses eval().
                     print("Malformed #include <...>")
                 filename = "".join(x.value for x in tokens[1:i])
 
-                path = self.path
+                path = self.path[next_path:]
             elif t0.type == self.t_STRING:
                 filename = t0.value[1:-1]
 
-                path = temp_path[:1] + self.path
+                # ‘#include_next’ does not distinguish between <file> and
+                # "file" inclusion, nor does it check that the file you
+                # specify has the same name as the current file.
+                # It simply looks for the file named, starting with the
+                # directory in the search path after the one where the
+                # current file was found.
+                # see: https://gcc.gnu.org/onlinedocs/cpp/Wrapper-Headers.html
+                if next_path:
+                    path = self.path[next_path:]
+                else:
+                    path = temp_path[:1] + self.path
             else:
                 print("Malformed #include statement")
                 return
         else:
             return
 
-        for p in path:
+        for next_path, p in enumerate(path, next_path + 1):
             iname = join(p, filename)
             try:
                 data = self.read_include_file(iname)
                 dname = dirname(iname)
                 if dname:
                     temp_path.insert(0, dname)
+                self.next_path = next_path
                 for tok in self.parsegen(data, filename):
                     yield tok
                 if dname:
