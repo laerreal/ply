@@ -568,6 +568,8 @@ Contains macro definitions, include directories, and other information.
         # Paths to skip during next searching for a file to `#include(_next)`
         self.next_path = 0
         self.inc_cache = {}  # text -> Includible
+        # __COUNTER__ macro implementation
+        self.counter = 0
 
         # Probe the lexer for selected tokens
         self.lexprobe()
@@ -1106,6 +1108,11 @@ That is not lineno you are looking for.
             elif t_value == "__LINE__":
                 t.type = self.t_INTEGER
                 t.value = self.t_INTEGER_TYPE(actual_lineno)
+            elif t_value == "__COUNTER__":
+                t.type = self.t_INTEGER
+                counter = self.counter
+                t.value = self.t_INTEGER_TYPE(counter)
+                self.counter = counter + 1
 
             i += 1
 
