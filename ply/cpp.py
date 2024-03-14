@@ -745,19 +745,20 @@ its macros and defined(...) expressions expanded by evalexpr.
         # cache
         ID = self.t_ID
         INTEGER = self.t_INTEGER
+        INTEGER_TYPE = self.t_INTEGER_TYPE
 
         for i, t in enumerate(tokens):
             if t.type == ID:
-                tokens[i] = copy(t)
-                tokens[i].type = INTEGER
-                tokens[i].value = self.t_INTEGER_TYPE("0")
+                tokens[i] = t = copy(t)
+                t.type = INTEGER
+                t.value = INTEGER_TYPE("0")
             elif t.type == INTEGER:
-                tokens[i] = copy(t)
+                tokens[i] = t = copy(t)
                 # Strip off any trailing suffixes
-                value = str(tokens[i].value)
+                value = str(t.value)
                 while value[-1] not in "0123456789abcdefABCDEF":
                     value = value[:-1]
-                tokens[i].value = value
+                t.value = value
 
         return self.evalexpr_string(tokens)
 
