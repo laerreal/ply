@@ -1013,8 +1013,18 @@ That is not lineno you are looking for.
                 m = macros[t_value]
                 arglist = m.arglist
 
-                if arglist:
-                    # A macro with arguments
+                if arglist is None:
+                    # An object-like macro.
+                    ex = self.expand_macros(
+                        copy_tokens(m.value), cur_expanded, actual_lineno
+                    )
+
+                    for e in ex:
+                        e.lineno = actual_lineno
+
+                    tokens[i:i + 1] = ex
+                else:
+                    # A function-like macro with or without arguments.
                     j = i + 1
                     while j < len(tokens) and tokens[j].type in WS:
                         j += 1
@@ -1091,16 +1101,6 @@ That is not lineno you are looking for.
                         # equals to name of the macro. Hence, go to the
                         # next token.
                         i += 1
-                else:
-                    # A simple macro
-                    ex = self.expand_macros(
-                        copy_tokens(m.value), cur_expanded, actual_lineno
-                    )
-
-                    for e in ex:
-                        e.lineno = actual_lineno
-
-                    tokens[i:i + 1] = ex
                 continue
 
             elif t_value == '__LINE__':
