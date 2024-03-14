@@ -1103,7 +1103,7 @@ That is not lineno you are looking for.
                         i += 1
                 continue
 
-            elif t_value == '__LINE__':
+            elif t_value == "__LINE__":
                 t.type = self.t_INTEGER
                 t.value = self.t_INTEGER_TYPE(actual_lineno)
 
