@@ -982,6 +982,14 @@ That is not lineno you are looking for.
         if expanded is None:
             expanded = set()
 
+        # After expansion of a macro, a new expansion can appear at that place.
+        # Hence, `i` must not be changed just after an expansion.
+        # The new expansion may be a one that already has been expanded,
+        # resulting in an infinite loop.
+        # To prevents this, expanded macros are remembered in `cur_expanded`.
+        # `cur_expanded` is reset when expansion starts at new place (`i`).
+        prev_i = None
+
         i = 0
         while i < len(tokens):
             t = tokens[i]
@@ -989,14 +997,18 @@ That is not lineno you are looking for.
                 i += 1
                 continue
 
+            if prev_i != i:
+                cur_expanded = set(expanded)
+                prev_i = i
+
             # cache
             t_value = t.value
 
             actual_lineno = t.lineno if lineno is None else lineno
 
-            if t_value in macros and t_value not in expanded:
+            if t_value in macros and t_value not in cur_expanded:
                 # Yes, we found a macro match
-                expanded.add(t_value)
+                cur_expanded.add(t_value)
 
                 m = macros[t_value]
                 arglist = m.arglist
@@ -1063,18 +1075,17 @@ That is not lineno you are looking for.
 
                             # Get macro replacement text
                             rep = self.macro_expand_args(
-                                m, args, expanded, actual_lineno
+                                m, args, cur_expanded, actual_lineno
                             )
 
                             rep = self.expand_macros(
-                                rep, expanded, actual_lineno
+                                rep, cur_expanded, actual_lineno
                             )
 
                             for r in rep:
                                 r.lineno = actual_lineno
 
                             tokens[i : j + tokcount] = rep
-                            i += len(rep)
                     else:
                         # This is not a macro. It is just a word which
                         # equals to name of the macro. Hence, go to the
@@ -1083,16 +1094,13 @@ That is not lineno you are looking for.
                 else:
                     # A simple macro
                     ex = self.expand_macros(
-                        copy_tokens(m.value), expanded, actual_lineno
+                        copy_tokens(m.value), cur_expanded, actual_lineno
                     )
 
                     for e in ex:
                         e.lineno = actual_lineno
 
                     tokens[i:i + 1] = ex
-                    i += len(ex)
-
-                expanded.remove(t_value)
                 continue
 
             elif t_value == '__LINE__':
